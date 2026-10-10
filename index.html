@@ -1,7 +1,44 @@
-<html>
-  <body>
-  <h5>
-    example
-  </h5>
-  </body>
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kitaplık — Manga &amp; Novel Okuma</title>
+  <meta name="description" content="Manga ve novel serilerini tarayıcıda okuyabileceğin sade bir okuma sitesi.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23e8590c'/><path d='M8 9h7v14H8zM17 9h7v14h-7z' fill='white'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar" id="topbar">
+    <a href="#/" class="brand" aria-label="Ana sayfa">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>Kitaplık</span>
+    </a>
+    <nav class="nav">
+      <a href="#/" data-nav="home">Keşfet</a>
+      <a href="#/kutuphane" data-nav="library">Kütüphanem</a>
+    </nav>
+    <div class="topbar-actions">
+      <label class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Seri, yazar, tür ara…" autocomplete="off">
+      </label>
+      <button class="icon-btn" id="themeToggle" title="Temayı değiştir" aria-label="Temayı değiştir">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+
+  <footer class="footer" id="footer">
+    <p>Kitaplık · Tüm örnek seriler bu site için yazılmış özgün içeriklerdir.</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
 </html>
