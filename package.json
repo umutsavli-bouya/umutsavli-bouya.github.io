@@ -1,0 +1,12 @@
+{
+  "name": "kitaplik",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-catalog.mjs",
+    "dev": "node scripts/build-catalog.mjs && npx --yes serve@14.2.4 -l 8080 ."
+  },
+  "dependencies": {
+    "js-yaml": "4.1.0"
+  }
+}
