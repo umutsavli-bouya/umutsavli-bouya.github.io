@@ -1,0 +1,87 @@
+# Kitaplık yönetim paneli ayarları (Sveltia / Decap CMS)
+# Panel: https://umutsavli-bouya.github.io/admin/
+backend:
+  name: github
+  repo: umutsavli-bouya/umutsavli-bouya.github.io
+  branch: main
+  commit_messages:
+    create: "{{collection}} eklendi: {{slug}}"
+    update: "{{collection}} güncellendi: {{slug}}"
+    delete: "{{collection}} silindi: {{slug}}"
+    uploadMedia: "Görsel yüklendi: {{path}}"
+    deleteMedia: "Görsel silindi: {{path}}"
+
+media_folder: content/media
+public_folder: /content/media
+
+locale: tr
+
+collections:
+  - name: series
+    label: Seriler
+    label_singular: Seri
+    description: Önce seriyi oluştur, sonra "Bölümler"den bölüm ekle.
+    folder: content/series
+    create: true
+    slug: "{{slug}}"
+    identifier_field: title
+    summary: "{{title}} — {{author}} ({{type}})"
+    fields:
+      - { name: title, label: Başlık, widget: string }
+      - name: type
+        label: Tür
+        widget: select
+        options: [{ label: Novel, value: novel }, { label: Manga, value: manga }]
+        default: novel
+      - { name: author, label: Yazar, widget: string }
+      - name: genres
+        label: Kategoriler
+        widget: select
+        multiple: true
+        options: [Aksiyon, Bilim Kurgu, Dram, Fantastik, Gizem, Komedi, Korku, Macera, Romantik, Spor, Tarihi, Yemek, Günlük Yaşam, Psikolojik]
+      - name: status
+        label: Durum
+        widget: select
+        options: [Devam ediyor, Tamamlandı, Ara verildi]
+        default: Devam ediyor
+      - { name: year, label: Yıl, widget: number, value_type: int }
+      - { name: synopsis, label: Özet, widget: text }
+      - { name: cover, label: Kapak görseli (isteğe bağlı), widget: image, required: false, hint: "Boş bırakırsan renklerden otomatik kapak üretilir. 2:3 oranında bir görsel önerilir." }
+      - { name: color, label: Kapak rengi, widget: color, default: "#3d405b", required: false }
+      - { name: accent, label: Yazı rengi, widget: color, default: "#f2cc8f", required: false }
+
+  - name: chapters
+    label: Bölümler
+    label_singular: Bölüm
+    folder: content/chapters
+    create: true
+    slug: "{{series}}-{{number}}"
+    identifier_field: title
+    summary: "{{series}} · {{number}}. {{title}}"
+    sortable_fields: [series, number, title]
+    view_groups:
+      - { label: Seri, field: series }
+    fields:
+      - name: series
+        label: Seri
+        widget: relation
+        collection: series
+        value_field: "{{slug}}"
+        search_fields: [title]
+        display_fields: [title]
+      - { name: number, label: Bölüm numarası, widget: number, value_type: int, min: 1 }
+      - { name: title, label: Bölüm başlığı, widget: string }
+      - { name: draft, label: Taslak (sitede gösterme), widget: boolean, default: false, required: false }
+      - name: body
+        label: Bölüm metni (novel)
+        widget: markdown
+        required: false
+        buttons: [bold, italic]
+        editor_components: []
+        hint: "Paragrafları boş satırla ayır. Sahne geçişi için tek satıra *** yaz."
+      - name: pages
+        label: Sayfa görselleri (manga)
+        widget: list
+        required: false
+        hint: "Manga bölümleri için sayfaları okunma sırasına göre ekle."
+        field: { name: image, label: Sayfa, widget: image }

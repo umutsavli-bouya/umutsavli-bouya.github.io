@@ -1,7 +1,8 @@
 (() => {
   "use strict";
 
-  const CATALOG = window.CATALOG || [];
+  // Demo mangalar (data.js) + content/ klasöründen üretilen catalog.json
+  const CATALOG = (window.CATALOG || []).slice();
   const app = document.getElementById("app");
   const searchInput = document.getElementById("search");
 
@@ -33,8 +34,14 @@
   const byId = (id) => CATALOG.find((s) => s.id === id);
   const typeLabel = (t) => (t === "manga" ? "Manga" : "Novel");
   const unitLabel = (s) => (s.type === "manga" ? "Bölüm" : "Bölüm");
-  const allGenres = [...new Set(CATALOG.flatMap((s) => s.genres))].sort((a, b) => a.localeCompare(b, "tr"));
+  const allGenres = () => [...new Set(CATALOG.flatMap((s) => s.genres))].sort((a, b) => a.localeCompare(b, "tr"));
   const norm = (s) => s.toLocaleLowerCase("tr").normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+  // Novel metni için küçük biçimlendirme: **kalın**, *italik*, _italik_
+  const inline = (t) => esc(t)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, "$1<em>$2</em>")
+    .replace(/(^|[\s(])_(?!\s)(.+?)_(?=[\s.,;:!?)]|$)/g, "$1<em>$2</em>");
 
   function hash(str) {
     let h = 2166136261;
@@ -90,6 +97,9 @@
       <text x="22" y="420" font-size="13" fill="${c2}" font-family="Inter, sans-serif" opacity=".8">${esc(s.author)}</text>
     </svg>`;
   }
+
+  // Seride kapak görseli varsa onu, yoksa üretilen kapağı kullan
+  const coverArt = (s) => (s.cover ? `<img src="${esc(s.cover)}" alt="${esc(s.title)} kapağı" loading="lazy">` : coverSVG(s));
 
   // Basit, özgün manga sayfası çizimi: paneller + sahne + konuşma balonu
   function scene(kind, x, y, w, h, r) {
@@ -259,7 +269,7 @@
   function card(s) {
     const pct = readPct(s);
     return `<a class="card" href="#/seri/${s.id}">
-      <div class="cover">${coverSVG(s)}<span class="badge">${typeLabel(s.type)}</span></div>
+      <div class="cover">${coverArt(s)}<span class="badge">${typeLabel(s.type)}</span></div>
       <h3>${esc(s.title)}</h3>
       <div class="meta">${esc(s.author)} · ${s.chapters.length} bölüm</div>
       ${pct ? `<div class="progress" title="%${pct} okundu"><span style="width:${pct}%"></span></div>` : ""}
@@ -276,7 +286,7 @@
   function continueHTML(items) {
     return `<div class="continue">${items.map(({ s, p }) => `
       <a class="continue-item" href="#/oku/${s.id}/${p.ch + 1}">
-        <div class="cover">${coverSVG(s)}</div>
+        <div class="cover">${coverArt(s)}</div>
         <div><h3>${esc(s.title)}</h3>
           <div class="meta">${unitLabel(s)} ${p.ch + 1} · ${esc(s.chapters[p.ch].title)}</div>
           <div class="progress"><span style="width:${readPct(s)}%"></span></div>
@@ -318,7 +328,7 @@
             <a class="btn" href="#/seri/${f.id}">Detaylar</a>
           </div>
         </div>
-        <div class="hero-art" style="background:linear-gradient(135deg, ${f.palette[1]}, ${f.palette[0]})">${coverSVG(f)}</div>
+        <div class="hero-art" style="background:linear-gradient(135deg, ${f.palette[1]}, ${f.palette[0]})">${coverArt(f)}</div>
       </section>
       ${cont.length ? `<section class="section"><div class="section-head"><h2>Okumaya devam et</h2><a class="count" href="#/kutuphane">Tümü →</a></div>${continueHTML(cont)}</section>` : ""}
       <section class="section">
@@ -329,7 +339,7 @@
           <button class="chip" data-type="novel">Novel</button>
           <span class="sep"></span>
           <button class="chip" data-genre="">Her tür</button>
-          ${allGenres.map((g) => `<button class="chip" data-genre="${esc(g)}">${esc(g)}</button>`).join("")}
+          ${allGenres().map((g) => `<button class="chip" data-genre="${esc(g)}">${esc(g)}</button>`).join("")}
         </div>
         <div class="grid" id="grid"></div>
       </section>
@@ -363,7 +373,7 @@
     const words = s.type === "novel" ? s.chapters.reduce((n, c) => n + c.paragraphs.join(" ").split(/\s+/).length, 0) : 0;
     const pages = s.type === "manga" ? s.chapters.reduce((n, c) => n + (c.images || c.pages).length, 0) : 0;
     app.innerHTML = `<div class="wrap"><div class="detail">
-      <div><div class="cover">${coverSVG(s)}</div></div>
+      <div><div class="cover">${coverArt(s)}</div></div>
       <div>
         <span class="eyebrow">${typeLabel(s.type)} · ${esc(s.status)}</span>
         <h1>${esc(s.title)}</h1>
@@ -473,7 +483,7 @@
       <article class="novel" id="novel">
         <h1>${unitLabel(s)} ${ci + 1}</h1>
         <h2>${esc(c.title)}</h2>
-        ${c.paragraphs.map((p) => `<p>${esc(p)}</p>`).join("")}
+        ${c.paragraphs.map((p) => (p === "***" ? `<hr class="scene-break">` : `<p>${inline(p)}</p>`)).join("")}
       </article>` + chapterNav(s, ci);
     const art = document.getElementById("novel");
     const apply = () => {
@@ -609,5 +619,15 @@
     else renderGrid();
   });
   addEventListener("hashchange", route);
-  route();
+
+  fetch("catalog.json", { cache: "no-cache" })
+    .then((r) => (r.ok ? r.json() : []))
+    .catch(() => [])
+    .then((extra) => {
+      for (const s of extra) {
+        const i = CATALOG.findIndex((x) => x.id === s.id);
+        if (i >= 0) CATALOG[i] = s; else CATALOG.push(s);
+      }
+      route();
+    });
 })();

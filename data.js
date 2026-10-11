@@ -1,10 +1,10 @@
-// Örnek katalog. Tüm seriler bu site için yazılmış özgün içeriklerdir.
-// Yeni seri eklemek için bu diziye aynı yapıda bir nesne eklemen yeterli.
+// Örnek manga serileri. Tüm seriler bu site için yazılmış özgün içeriklerdir.
 //
-// type: "manga" → chapters[].pages: her sayfa bir panel listesidir.
+// Novel'lar ve görsel sayfalı mangalar artık content/ klasöründe Markdown olarak duruyor
+// (bkz. README). Bu dosya sadece kodla çizilen demo mangaları tutar.
+//
+// chapters[].pages: her sayfa bir panel listesidir.
 //   Panel: { scene, text, speaker }  (scene: night | city | forest | sea | room | sky | fire)
-//   Gerçek görsellerin varsa pages yerine images: ["url1.jpg", "url2.jpg"] kullanabilirsin.
-// type: "novel" → chapters[].paragraphs: düz metin paragrafları.
 
 window.CATALOG = [
   {
@@ -74,60 +74,6 @@ window.CATALOG = [
     ]
   },
   {
-    id: "son-tren",
-    type: "novel",
-    title: "Son Tren 23:47",
-    author: "Selin Aras",
-    genres: ["Gizem", "Dram"],
-    status: "Devam ediyor",
-    year: 2026,
-    palette: ["#2d3142", "#ef8354"],
-    synopsis:
-      "Her gece 23:47'de kalkan son trende hep aynı yolcular vardır. Kondüktör Orhan, bir gece listede olmayan bir yolcuyla karşılaşınca, otuz yıldır aynı geceyi yaşadığını fark etmeye başlar.",
-    chapters: [
-      {
-        title: "Bilet",
-        paragraphs: [
-          "Orhan saatine baktı. 23:46. Peronun ucundaki lamba her zamanki gibi iki kez göz kırptı, sonra sabitlendi. Otuz yıldır bu lambanın tamir edilmesini bekliyordu ve otuz yıldır kimse tamir etmemişti.",
-          "Vagonlar boştu, ya da boş görünüyordu. Üçüncü vagonda örgü ören yaşlı kadın, beşinci vagonda kulaklığını hiç çıkarmayan genç, son vagonda da gazetesini hep aynı sayfada tutan adam. Orhan onların adlarını bilmezdi ama yüzlerini kendi yüzünden iyi tanırdı.",
-          "Düdüğü öttürdü. Tren sarsılarak hareket etti.",
-          "Biletleri kontrol etmeye ikinci vagondan başladı, her zamanki gibi. Ama ikinci vagonda bu gece biri vardı.",
-          "Kız pencereye yaslanmış, camdaki buğuya parmağıyla bir şeyler çiziyordu. Yirmi yaşlarında olmalıydı. Sırt çantası, rengi solmuş bir mont, bir de elinde — Orhan gözlerini kıstı — sarı, eski tip, delikli bir bilet.",
-          "\"İyi akşamlar,\" dedi Orhan. \"Biletinizi görebilir miyim?\"",
-          "Kız başını çevirdi. Gözlerinde şaşkınlıktan çok bir tür rahatlama vardı, sanki uzun süredir birinin bunu sormasını bekliyormuş gibi.",
-          "\"Siz Orhan Bey'siniz, değil mi?\" dedi. \"Sonunda.\"",
-          "Orhan bileti aldı. Üzerindeki tarih silikti ama okunabiliyordu: 14 Kasım 1994.",
-          "Kendi ilk mesai gününün tarihi."
-        ]
-      },
-      {
-        title: "Yolcu Listesi",
-        paragraphs: [
-          "Kondüktör kulübesinde, çaydanlığın tıkırtısı arasında Orhan yolcu listesini üçüncü kez okudu. Liste her gece aynıydı: dört isim, dört koltuk numarası. Kızın adı yoktu.",
-          "\"Adın ne?\" diye sordu kapıda bekleyen kıza.",
-          "\"Nil.\"",
-          "\"Nil ne?\"",
-          "Kız omuz silkti. \"Sadece Nil. Soyadımı hatırlamıyorum. Aslında pek çok şeyi hatırlamıyorum. Ama sizi hatırlıyorum. Ve bu treni.\"",
-          "Orhan çayı iki bardağa doldurdu, birini kıza uzattı. Elleri titremiyordu; otuz yıl insanı bazı şeylere alıştırıyordu. Ama içinde bir yerde, uzun zamandır kilitli duran bir kapının kolu yavaşça dönüyordu.",
-          "\"Bu tren,\" dedi Nil, bardağı iki eliyle tutarak, \"hiçbir yere varmıyor, değil mi?\"",
-          "Orhan pencereden dışarı baktı. Karanlıkta, rayların kenarında, her gece aynı yerde duran o tek ağaç geçti.",
-          "\"Varıyor,\" dedi. \"Sadece hep aynı yere.\""
-        ]
-      },
-      {
-        title: "Gazete",
-        paragraphs: [
-          "Son vagondaki adam gazetesini indirmedi. Orhan otuz yıldır onun yüzünü sadece gazetenin üstünden, kaşlarına kadar görmüştü.",
-          "\"Beyefendi,\" dedi Nil, Orhan'ın onu durdurmasına fırsat vermeden. \"Hangi sayfayı okuyorsunuz?\"",
-          "Gazete hışırdadı. Adam yavaşça indirdi onu. Yüzü sıradandı; unutulmaya yazgılı, kalabalıkta kaybolacak bir yüz. Ama gözleri Orhan'ınkilere benziyordu. Fazla benziyordu.",
-          "\"Hep aynı sayfayı,\" dedi adam. \"Kayıp ilanlarını.\"",
-          "Nil gazeteyi aldı ve sayfayı Orhan'a çevirdi. Sayfanın ortasında, siyah beyaz, küçük bir fotoğraf vardı.",
-          "Fotoğraftaki kız Nil'di."
-        ]
-      }
-    ]
-  },
-  {
     id: "demir-sef",
     type: "manga",
     title: "Demir Şef",
@@ -173,46 +119,6 @@ window.CATALOG = [
     ]
   },
   {
-    id: "yedinci-kat",
-    type: "novel",
-    title: "Yedinci Katın Kütüphanesi",
-    author: "Ayşe Demirci",
-    genres: ["Fantastik", "Romantik"],
-    status: "Devam ediyor",
-    year: 2025,
-    palette: ["#344e41", "#dad7cd"],
-    synopsis:
-      "Altı katlı bir apartmanda yedinci kata çıkan bir merdiven bulan Defne, orada okunmamış hikâyelerin saklandığı bir kütüphane ve onu yüz yıldır bekleyen huysuz bir kütüphaneci bulur.",
-    chapters: [
-      {
-        title: "Fazladan Bir Basamak",
-        paragraphs: [
-          "Apartman altı katlıydı. Defne bunu biliyordu, çünkü yeni taşındıkları bu binanın tabelasında açıkça yazıyordu: Gül Apartmanı, 6 kat, 12 daire. Asansör de altıya kadar gidiyordu. Ama merdivenler gitmiyordu.",
-          "Bir pazar sabahı, annesi uyurken çöpü atmaya inmek yerine yanlışlıkla yukarı çıktığında fark etti bunu. Altıncı katın sahanlığından sonra merdiven devam ediyordu: dar, ahşap, cilası yer yer kalkmış basamaklarla.",
-          "Defne saydı. On üç basamak. Sonunda yeşile boyanmış, pirinç tokmaklı bir kapı.",
-          "Kapının üstünde, eski harflerle tek bir kelime yazıyordu: OKUNMAMIŞ.",
-          "Tokmağa dokunduğunda kapı kendiliğinden açıldı. İçerisi mürekkep ve yağmur kokuyordu. Raflar tavana kadar uzanıyor, tavan da — Defne başını kaldırdı — görünmüyordu. Raflar sanki sonsuza kadar yukarı çıkıyordu.",
-          "\"Geç kaldın,\" dedi bir ses. \"Yüz iki yıl, dört ay, on bir gün.\"",
-          "Masanın arkasında, yuvarlak gözlüklü, kravatı tozlu bir genç adam oturuyordu. Ya da genç görünüyordu. Gözleri, yüzünden çok daha yaşlıydı.",
-          "\"Ben… sadece çöpü atacaktım,\" dedi Defne."
-        ]
-      },
-      {
-        title: "Kütüphaneci",
-        paragraphs: [
-          "Adının Rüzgâr olduğunu söyledi, ama bunu söylerken yüzünü buruşturdu, sanki ismi ona sonradan yakıştırılmış bir ceketmiş gibi.",
-          "\"Buradaki kitapların hepsi yazılmış ama hiç okunmamış hikâyeler,\" dedi, rafları göstererek. \"Biri bir hikâye düşünür, kafasında tamamlar, ama kimseye anlatmaz. Hikâye de buraya gelir. Ve bekler.\"",
-          "\"Neyi bekler?\"",
-          "\"Okunmayı tabii ki.\" Rüzgâr gözlüklerini düzeltti. \"Okunmayan hikâye yavaş yavaş solar. Sayfaları beyazlaşır. Sonunda tamamen kaybolur. Son yüz yılda kütüphanenin yarısını kaybettik.\"",
-          "Defne en yakın raftan bir kitap aldı. Kapağı neredeyse şeffaftı. Açtığında sayfalarda sadece birkaç kelime kalmıştı: …ve sonra deniz…",
-          "\"Peki neden ben?\"",
-          "Rüzgâr ilk kez gülümsedi. Kısa, isteksiz, ama gerçek bir gülümseme.",
-          "\"Çünkü merdiveni sadece hikâye okumayı gerçekten seven biri görebilir. Ve sen, bu binaya taşındığın gün, kutulardan ilk önce kitaplarını çıkardın.\""
-        ]
-      }
-    ]
-  },
-  {
     id: "dalga-kiran",
     type: "manga",
     title: "Dalgakıran",
@@ -252,41 +158,6 @@ window.CATALOG = [
           [
             { scene: "sky", text: "İşte o ses, senin ritmin. Onu takip et.", speaker: "Koç Sinan" }
           ]
-        ]
-      }
-    ]
-  },
-  {
-    id: "kirk-kapi",
-    type: "novel",
-    title: "Kırk Kapılı Han",
-    author: "Murat Ersoy",
-    genres: ["Tarihi", "Macera", "Fantastik"],
-    status: "Tamamlandı",
-    year: 2023,
-    palette: ["#7f5539", "#ede0d4"],
-    synopsis:
-      "İpek Yolu üzerindeki bir handa her kapı başka bir şehre açılır. Hancının kızı Gülbahar, babası öldükten sonra kapıların anahtarlarını devralır — ve otuz dokuzuncu kapının neden hiç açılmadığını öğrenmek ister.",
-    chapters: [
-      {
-        title: "Anahtarlar",
-        paragraphs: [
-          "Babasının ölümünden üç gün sonra, Gülbahar anahtar halkasını ilk kez kendi beline taktı. Kırk anahtar vardı halkada; kırk kapı için kırk anahtar. Her biri ayrı bir metalden, ayrı bir ustanın elinden çıkmıştı.",
-          "Birinci kapı Semerkant'a açılırdı. Gülbahar onu çocukken yüzlerce kez açmış, kapının ardındaki pazarın baharat kokusunu içine çekmişti. İkinci kapı Tebriz'e, üçüncüsü Halep'e. On yedinci kapının ardında hep kar yağardı; kimse oranın neresi olduğunu bilmezdi ama kürk tüccarları orayı çok severdi.",
-          "Otuz dokuzuncu kapı ise hiç açılmamıştı.",
-          "Anahtarı siyahtı, soğuktu, ve tuhaf biçimde ağırdı — diğer anahtarların üç katı. Babası onu asla kullanmamış, Gülbahar sorduğunda da yalnızca başını sallamıştı: \"Bazı kapılar kapalı kalmak için yapılır, kızım.\"",
-          "Ama babası artık yoktu. Ve handa, avlunun ortasında, deveciler arasında fısıltılar dolaşıyordu: Kırkıncı kapının ardındaki şehir, otuz dokuzuncu kapı açılmadıkça bir daha ulaşılamayacakmış."
-        ]
-      },
-      {
-        title: "Otuz Dokuzuncu Kapı",
-        paragraphs: [
-          "Gece yarısı, han uyurken, Gülbahar fenerini aldı ve uzun koridorun sonuna yürüdü. Kapılar birer birer yanından geçti; bazılarının altından ışık sızıyordu, bazılarından müzik, birinden de deniz sesi.",
-          "Otuz dokuzuncu kapı diğerlerinden farklı değildi. Aynı ceviz ağacı, aynı demir menteşeler. Sadece kilidin etrafında, tahtanın üzerinde, birinin tırnağıyla kazıdığı ince çizgiler vardı. Gülbahar fenerini yaklaştırdı.",
-          "Çizgiler bir yazıydı. Babasının el yazısı.",
-          "Açma. Ama açarsan, beni ara.",
-          "Gülbahar siyah anahtarı kilide soktu. Çevirdi.",
-          "Kapı açıldığında ardında bir şehir yoktu. Ardında, aynı koridor vardı — aynı kırk kapı, aynı fener ışığı. Ve koridorun en ucunda, sırtı ona dönük, anahtar halkasını belinde taşıyan bir adam duruyordu."
         ]
       }
     ]

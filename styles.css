@@ -90,7 +90,7 @@ body.chrome-hidden .topbar { transform: translateY(-100%); }
 .hero p { margin: 0; color: var(--muted); max-width: 52ch; }
 .hero-art { position: relative; min-height: 220px; }
 .hero-art { overflow: hidden; }
-.hero-art svg {
+.hero-art svg, .hero-art img {
   position: absolute; top: 50%; left: 50%; height: 84%; width: auto; aspect-ratio: 2 / 3;
   transform: translate(-50%, -50%) rotate(-4deg); border-radius: 10px; box-shadow: 0 20px 40px rgba(0,0,0,.35);
 }
@@ -124,7 +124,7 @@ body.chrome-hidden .topbar { transform: translateY(-100%); }
 .card { display: flex; flex-direction: column; gap: 8px; }
 .card .cover { border-radius: 10px; overflow: hidden; aspect-ratio: 2 / 3; box-shadow: var(--shadow); transition: transform .2s ease; position: relative; }
 .card:hover .cover { transform: translateY(-3px); }
-.card .cover svg { width: 100%; height: 100%; }
+.card .cover svg, .cover img { width: 100%; height: 100%; object-fit: cover; }
 .badge {
   position: absolute; top: 8px; left: 8px; padding: 2px 8px; border-radius: 6px;
   font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
@@ -213,6 +213,8 @@ body.chrome-hidden .reader-bar { top: 0; transform: translateY(-100%); }
 .novel.sans { font-family: var(--font); }
 .novel h1 { font-family: var(--font); font-size: 14px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
 .novel h2 { font-size: 1.6em; line-height: 1.25; margin: 0 0 1.4em; letter-spacing: -.01em; }
+.novel .scene-break { border: 0; text-align: center; margin: 1.8em 0; }
+.novel .scene-break::before { content: "⁂"; color: var(--muted); font-size: 1.1em; }
 .novel p { margin: 0 0 1.1em; text-wrap: pretty; hyphens: auto; }
 .novel p:first-of-type::first-letter { font-size: 3.2em; float: left; line-height: .9; padding: .06em .08em 0 0; color: var(--accent); font-weight: 600; }
 
