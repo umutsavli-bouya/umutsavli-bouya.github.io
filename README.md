@@ -70,11 +70,11 @@ pages:
 Repo sayfasında `content/chapters` klasörüne gir → **Add file → Create new file / Upload files**,
 yukarıdaki biçimde bir `.md` dosyası ekle ve commit et.
 
-## Yayın ayarı (bir kerelik)
-Settings → Pages → Build and deployment → **Source: GitHub Actions** seç.
-Her push'ta `.github/workflows/pages.yml` içerikten `catalog.json` üretip siteyi yayınlar.
-Bir dosyada hata varsa (ör. olmayan bir seriye bölüm) yayın durur ve Actions sekmesinde
-hangi dosyada ne sorun olduğu yazar; site eski hâliyle açık kalır.
+## Yayın nasıl çalışıyor
+Site doğrudan `main` dalından yayınlanır, ek bir ayar gerekmez. `content/` içinde bir dosya
+değişince `.github/workflows/pages.yml` `catalog.json`'u yeniden üretip commit'ler ve site
+1–2 dakika içinde güncellenir. Bir dosyada hata varsa (ör. olmayan bir seriye bölüm) Actions
+sekmesinde iş kırmızı olur, hangi dosyada ne sorun olduğu yazar; site eski hâliyle açık kalır.
 
 ## Bilgisayarda çalıştırmak
 ```bash
