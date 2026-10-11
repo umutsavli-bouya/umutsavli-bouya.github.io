@@ -43,6 +43,22 @@
     .replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, "$1<em>$2</em>")
     .replace(/(^|[\s(])_(?!\s)(.+?)_(?=[\s.,;:!?)]|$)/g, "$1<em>$2</em>");
 
+  const chapterText = (c) => (c.html != null ? c.html.replace(/<[^>]+>/g, " ") : c.paragraphs.join(" "));
+
+  // catalog.json'dan gelen seriyi eksik alanlara karşı tamamla
+  function normalize(s) {
+    const type = s.type === "manga" ? "manga" : "novel";
+    const chapters = (s.chapters || []).filter((c) => (type === "manga" ? c.images && c.images.length : c.html || c.paragraphs));
+    return {
+      id: String(s.id), type, title: String(s.title || s.id), author: String(s.author || "Bilinmeyen yazar"),
+      genres: [].concat(s.genres || []).map(String), status: s.status || "Devam ediyor",
+      year: s.year || new Date().getFullYear(),
+      palette: [(s.palette && s.palette[0]) || "#3d405b", (s.palette && s.palette[1]) || "#f2cc8f"],
+      cover: s.cover || null, synopsis: s.synopsis || "",
+      chapters: chapters.map((c) => ({ ...c, title: c.title || `Bölüm ${c.number}`, images: c.images && c.images.map((i) => (typeof i === "string" ? i : i.image)) }))
+    };
+  }
+
   function hash(str) {
     let h = 2166136261;
     for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
@@ -370,7 +386,7 @@
     const p = state.progress[s.id];
     const read = new Set(state.read[s.id] || []);
     const fav = state.favs.has(s.id);
-    const words = s.type === "novel" ? s.chapters.reduce((n, c) => n + c.paragraphs.join(" ").split(/\s+/).length, 0) : 0;
+    const words = s.type === "novel" ? s.chapters.reduce((n, c) => n + chapterText(c).split(/\s+/).length, 0) : 0;
     const pages = s.type === "manga" ? s.chapters.reduce((n, c) => n + (c.images || c.pages).length, 0) : 0;
     app.innerHTML = `<div class="wrap"><div class="detail">
       <div><div class="cover">${coverArt(s)}</div></div>
@@ -483,7 +499,7 @@
       <article class="novel" id="novel">
         <h1>${unitLabel(s)} ${ci + 1}</h1>
         <h2>${esc(c.title)}</h2>
-        ${c.paragraphs.map((p) => (p === "***" ? `<hr class="scene-break">` : `<p>${inline(p)}</p>`)).join("")}
+        ${c.html != null ? c.html.replace(/<hr\s*\/?>/g, '<hr class="scene-break">') : c.paragraphs.map((p) => (p === "***" ? `<hr class="scene-break">` : `<p>${inline(p)}</p>`)).join("")}
       </article>` + chapterNav(s, ci);
     const art = document.getElementById("novel");
     const apply = () => {
@@ -624,7 +640,9 @@
     .then((r) => (r.ok ? r.json() : []))
     .catch(() => [])
     .then((extra) => {
-      for (const s of extra) {
+      for (const raw of Array.isArray(extra) ? extra : []) {
+        const s = normalize(raw);
+        if (!s.chapters.length) continue;
         const i = CATALOG.findIndex((x) => x.id === s.id);
         if (i >= 0) CATALOG[i] = s; else CATALOG.push(s);
       }

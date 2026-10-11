@@ -1,7 +1,7 @@
 # Kitaplık — Manga & Novel Okuma Sitesi
 
 GitHub Pages üzerinde çalışan statik bir okuma sitesi. İçerik `content/` klasöründeki
-Markdown dosyalarından üretilir; ister yönetim panelinden, ister doğrudan GitHub'dan yüklenebilir.
+Markdown dosyalarından GitHub Pages'in kendi derleyicisi (Jekyll) tarafından üretilir; ister yönetim panelinden, ister doğrudan GitHub'dan yüklenebilir.
 
 ## Özellikler
 - **Keşfet:** Günün serisi, manga/novel ve türe göre filtre, anlık arama
@@ -14,12 +14,12 @@ Markdown dosyalarından üretilir; ister yönetim panelinden, ister doğrudan Gi
 ## İçerik yapısı
 ```
 content/
-  series/son-tren.md        ← seri bilgileri (dosya adı = seri kimliği)
-  chapters/son-tren-1.md    ← bölümler
+  _series/son-tren.md        ← seri bilgileri (dosya adı = seri kimliği)
+  _chapters/son-tren-1.md    ← bölümler
   media/                    ← kapak ve manga sayfa görselleri
 ```
 
-**Seri dosyası** (`content/series/<seri-id>.md`):
+**Seri dosyası** (`content/_series/<seri-id>.md`):
 ```markdown
 ---
 title: "Son Tren 23:47"
@@ -35,7 +35,7 @@ accent: "#ef8354"                 # otomatik kapak yazı rengi
 ---
 ```
 
-**Novel bölümü** (`content/chapters/<seri-id>-<numara>.md`):
+**Novel bölümü** (`content/_chapters/<seri-id>-<numara>.md`):
 ```markdown
 ---
 series: son-tren
@@ -67,19 +67,19 @@ pages:
    Panel dosyayı repoya kaydeder; site 1–2 dakika içinde güncellenir.
 
 ### B) GitHub'dan doğrudan
-Repo sayfasında `content/chapters` klasörüne gir → **Add file → Create new file / Upload files**,
+Repo sayfasında `content/_chapters` klasörüne gir → **Add file → Create new file / Upload files**,
 yukarıdaki biçimde bir `.md` dosyası ekle ve commit et.
 
 ## Yayın nasıl çalışıyor
-Site doğrudan `main` dalından yayınlanır, ek bir ayar gerekmez. `content/` içinde bir dosya
-değişince `.github/workflows/pages.yml` `catalog.json`'u yeniden üretip commit'ler ve site
-1–2 dakika içinde güncellenir. Bir dosyada hata varsa (ör. olmayan bir seriye bölüm) Actions
-sekmesinde iş kırmızı olur, hangi dosyada ne sorun olduğu yazar; site eski hâliyle açık kalır.
+Site doğrudan `main` dalından yayınlanır; ek ayar veya GitHub Actions gerekmez. GitHub Pages
+her push'ta siteyi Jekyll ile derler ve `catalog.json` şablonu `content/` içindeki tüm seri ve
+bölümlerden kataloğu üretir. Yeni bir bölüm 1–2 dakika içinde sitede görünür.
+Taslak (`draft: true`) bölümler ve hiç bölümü olmayan seriler gösterilmez.
 
 ## Bilgisayarda çalıştırmak
 ```bash
-npm install
-npm run dev     # catalog.json üretir ve http://localhost:8080 adresinde açar
+gem install jekyll -v 3.10.0 kramdown-parser-gfm webrick
+jekyll serve      # http://localhost:4000
 ```
 
 ## İçerik hakları
