@@ -9,5 +9,6 @@ status: "Devam ediyor"
 year: 2025
 color: "#344e41"
 accent: "#dad7cd"
+rating: 9.0
 synopsis: "Altı katlı bir apartmanda yedinci kata çıkan bir merdiven bulan Defne, orada okunmamış hikâyelerin saklandığı bir kütüphane ve onu yüz yıldır bekleyen huysuz bir kütüphaneci bulur."
 ---

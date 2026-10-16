@@ -1,6 +1,7 @@
 ---
 series: kirk-kapi
 number: 1
+released: 2026-07-03
 title: "Anahtarlar"
 ---
 Babasının ölümünden üç gün sonra, Gülbahar anahtar halkasını ilk kez kendi beline taktı. Kırk anahtar vardı halkada; kırk kapı için kırk anahtar. Her biri ayrı bir metalden, ayrı bir ustanın elinden çıkmıştı.

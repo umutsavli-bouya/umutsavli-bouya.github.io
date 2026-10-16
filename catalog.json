@@ -12,9 +12,9 @@ layout: null
   {%- if chs.size > 0 -%}
     {%- unless first -%},{%- endunless -%}
     {%- assign first = false %}
-{"id":{{ s.slug | jsonify }},"type":{{ s.type | jsonify }},"title":{{ s.title | jsonify }},"author":{{ s.author | jsonify }},"genres":{{ s.genres | jsonify }},"status":{{ s.status | jsonify }},"year":{{ s.year | jsonify }},"palette":[{{ s.color | jsonify }},{{ s.accent | jsonify }}],"cover":{{ s.cover | jsonify }},"synopsis":{{ s.synopsis | jsonify }},"chapters":[
+{"id":{{ s.slug | jsonify }},"type":{{ s.type | jsonify }},"title":{{ s.title | jsonify }},"author":{{ s.author | jsonify }},"artist":{{ s.artist | jsonify }},"rating":{{ s.rating | jsonify }},"featured":{{ s.featured | jsonify }},"genres":{{ s.genres | jsonify }},"status":{{ s.status | jsonify }},"year":{{ s.year | jsonify }},"palette":[{{ s.color | jsonify }},{{ s.accent | jsonify }}],"cover":{{ s.cover | jsonify }},"synopsis":{{ s.synopsis | jsonify }},"chapters":[
     {%- for c in chs -%}
-{"number":{{ c.number | jsonify }},"title":{{ c.title | jsonify }},
+{"number":{{ c.number | jsonify }},"title":{{ c.title | jsonify }},"released":{% if c.released %}{{ c.released | date: "%Y-%m-%dT%H:%M:%S%:z" | jsonify }}{% else %}null{% endif %},
       {%- if s.type == "manga" -%}"images":{{ c.pages | jsonify }}{%- else -%}"html":{{ c.content | markdownify | strip | jsonify }}{%- endif -%}}
       {%- unless forloop.last -%},{%- endunless -%}
     {%- endfor -%}
