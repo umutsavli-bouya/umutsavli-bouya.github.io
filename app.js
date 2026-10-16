@@ -43,6 +43,23 @@
     .replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, "$1<em>$2</em>")
     .replace(/(^|[\s(])_(?!\s)(.+?)_(?=[\s.,;:!?)]|$)/g, "$1<em>$2</em>");
 
+  const chapterText = (c) => (c.html != null ? c.html.replace(/<[^>]+>/g, " ") : c.paragraphs.join(" "));
+
+  // catalog.json'dan gelen seriyi eksik alanlara karşı tamamla
+  function normalize(s) {
+    const type = s.type === "manga" ? "manga" : "novel";
+    const chapters = (s.chapters || []).filter((c) => (type === "manga" ? c.images && c.images.length : c.html || c.paragraphs));
+    return {
+      id: String(s.id), type, title: String(s.title || s.id), author: String(s.author || "Bilinmeyen yazar"),
+      artist: s.artist || null, rating: s.rating ?? null, featured: !!s.featured,
+      genres: [].concat(s.genres || []).map(String), status: s.status || "Devam ediyor",
+      year: s.year || new Date().getFullYear(),
+      palette: [(s.palette && s.palette[0]) || "#3d405b", (s.palette && s.palette[1]) || "#f2cc8f"],
+      cover: s.cover || null, synopsis: s.synopsis || "",
+      chapters: chapters.map((c) => ({ ...c, title: c.title || `Bölüm ${c.number}`, images: c.images && c.images.map((i) => (typeof i === "string" ? i : i.image)) }))
+    };
+  }
+
   function hash(str) {
     let h = 2166136261;
     for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
@@ -260,18 +277,56 @@
   const savedTheme = store.get("theme", null);
   if (savedTheme) root.dataset.theme = savedTheme;
   document.getElementById("themeToggle").addEventListener("click", () => {
-    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-    root.dataset.theme = dark ? "light" : "dark";
+    root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
     store.set("theme", root.dataset.theme);
   });
 
   // ---------- Views ----------
+  const SITE = Object.assign({ name: "Kitaplık", giscus: {} }, window.SITE || {});
+  const DAY = 864e5;
+  const chNum = (s, i) => s.chapters[i].number ?? i + 1;
+  const chTime = (c) => (c.released ? Date.parse(c.released) || 0 : 0);
+  const lastUpdate = (s) => Math.max(0, ...s.chapters.map(chTime));
+  const isNew = (c) => { const t = chTime(c); return t && Date.now() - t < 3 * DAY; };
+  const byUpdate = (a, b) => lastUpdate(b) - lastUpdate(a) || a.title.localeCompare(b.title, "tr");
+  const rating = (s) => (s.rating != null && s.rating !== "" ? Number(s.rating) : null);
+  const star = `<svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>`;
+  const ratingHTML = (s) => (rating(s) != null ? `<span class="rating">${star}${rating(s).toFixed(1)}</span>` : "");
+
+  function ago(t) {
+    if (!t) return "";
+    const d = Date.now() - t;
+    if (d < 60e3) return "az önce";
+    if (d < 36e5) return `${Math.floor(d / 6e4)} dk önce`;
+    if (d < DAY) return `${Math.floor(d / 36e5)} saat önce`;
+    if (d < 7 * DAY) return `${Math.floor(d / DAY)} gün önce`;
+    if (d < 30 * DAY) return `${Math.floor(d / (7 * DAY))} hafta önce`;
+    return new Date(t).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  // Son eklenen bölümler kartı: kapak + son 3 bölüm
+  function updateCard(s) {
+    const last = s.chapters.map((c, i) => ({ c, i })).slice(-3).reverse();
+    return `<article class="ucard">
+      <a class="ucover cover" href="#/seri/${s.id}">${coverArt(s)}<span class="badge">${typeLabel(s.type)}</span></a>
+      <div class="ubody">
+        <a class="utitle" href="#/seri/${s.id}">${esc(s.title)}</a>
+        <div class="umeta">${ratingHTML(s)}<span>${esc(s.status)}</span></div>
+        <ul class="uchs">${last.map(({ c, i }) => `
+          <li><a href="#/oku/${s.id}/${i + 1}"><span>Bölüm ${esc(chNum(s, i))}</span>${isNew(c) ? `<span class="new">YENİ</span>` : ""}</a><time>${ago(chTime(c))}</time></li>`).join("")}
+        </ul>
+      </div>
+    </article>`;
+  }
+
+  // Seri listesi kartı
   function card(s) {
     const pct = readPct(s);
+    const li = s.chapters.length - 1;
     return `<a class="card" href="#/seri/${s.id}">
-      <div class="cover">${coverArt(s)}<span class="badge">${typeLabel(s.type)}</span></div>
+      <div class="cover">${coverArt(s)}<span class="badge">${typeLabel(s.type)}</span>${rating(s) != null ? `<span class="badge right">${star}${rating(s).toFixed(1)}</span>` : ""}</div>
       <h3>${esc(s.title)}</h3>
-      <div class="meta">${esc(s.author)} · ${s.chapters.length} bölüm</div>
+      <div class="meta">Bölüm ${esc(chNum(s, li))}${chTime(s.chapters[li]) ? ` · ${ago(chTime(s.chapters[li]))}` : ""}</div>
       ${pct ? `<div class="progress" title="%${pct} okundu"><span style="width:${pct}%"></span></div>` : ""}
     </a>`;
   }
@@ -283,69 +338,194 @@
       .sort((a, b) => b.p.t - a.p.t)
       .slice(0, limit);
   }
-  function continueHTML(items) {
-    return `<div class="continue">${items.map(({ s, p }) => `
+  function continueHTML(items, compact) {
+    return `<div class="continue ${compact ? "compact" : ""}">${items.map(({ s, p }) => `
       <a class="continue-item" href="#/oku/${s.id}/${p.ch + 1}">
         <div class="cover">${coverArt(s)}</div>
         <div><h3>${esc(s.title)}</h3>
-          <div class="meta">${unitLabel(s)} ${p.ch + 1} · ${esc(s.chapters[p.ch].title)}</div>
+          <div class="meta">Bölüm ${esc(chNum(s, p.ch))} · ${esc(s.chapters[p.ch].title)}</div>
           <div class="progress"><span style="width:${readPct(s)}%"></span></div>
         </div>
       </a>`).join("")}</div>`;
   }
 
-  function filtered() {
-    const q = norm(state.q.trim());
-    return CATALOG.filter((s) =>
-      (state.type === "all" || s.type === state.type) &&
-      (!state.genre || s.genres.includes(state.genre)) &&
-      (!q || norm([s.title, s.author, ...s.genres].join(" ")).includes(q))
-    );
+  // Popüler: seçilen dönemde bölüm alan seriler, puana göre
+  function popular(range) {
+    const span = { week: 7 * DAY, month: 30 * DAY }[range];
+    let list = CATALOG.slice();
+    if (span) list = list.filter((s) => s.chapters.some((c) => chTime(c) && Date.now() - chTime(c) < span));
+    return list.sort((a, b) => (rating(b) ?? -1) - (rating(a) ?? -1) || byUpdate(a, b)).slice(0, 8);
+  }
+  function popularHTML(range) {
+    const list = popular(range);
+    if (!list.length) return `<li class="pop-empty">Bu dönemde güncellenen seri yok.</li>`;
+    return list.map((s, i) => `
+      <li><a href="#/seri/${s.id}">
+        <span class="rank">${i + 1}</span>
+        <span class="pop-cover cover">${coverArt(s)}</span>
+        <span class="pop-info"><b>${esc(s.title)}</b><small>${esc(s.genres.slice(0, 2).join(", "))}</small>${ratingHTML(s)}</span>
+      </a></li>`).join("");
   }
 
-  function renderGrid() {
-    const list = filtered();
-    const el = document.getElementById("grid");
-    if (!el) return;
-    el.innerHTML = list.length ? list.map(card).join("") : `<div class="empty" style="grid-column:1/-1">Aramana uygun seri bulunamadı.</div>`;
-    document.getElementById("gridCount").textContent = `${list.length} seri`;
-    document.querySelectorAll("[data-type]").forEach((b) => b.classList.toggle("active", b.dataset.type === state.type));
-    document.querySelectorAll("[data-genre]").forEach((b) => b.classList.toggle("active", b.dataset.genre === (state.genre || "")));
-  }
+  const discordIcon = `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M19.3 5.3A16.6 16.6 0 0 0 15.2 4l-.5 1a15.4 15.4 0 0 0-5.4 0l-.5-1a16.6 16.6 0 0 0-4.1 1.3C2.1 9.2 1.4 13 1.7 16.8a16.8 16.8 0 0 0 5 2.5l1.1-1.7a10.8 10.8 0 0 1-1.7-.8l.4-.3a11.9 11.9 0 0 0 11 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.7a16.7 16.7 0 0 0 5-2.5c.4-4.4-.7-8.2-3-11.5zM8.7 14.5c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2z"/></svg>`;
 
-  function viewHome() {
-    const day = Math.floor(Date.now() / 864e5);
-    const f = CATALOG[day % CATALOG.length];
+  function sidebar() {
     const cont = continueList(3);
-    app.innerHTML = `<div class="wrap">
-      <section class="hero">
-        <div class="hero-body">
-          <span class="eyebrow">Günün serisi · ${typeLabel(f.type)}</span>
-          <h1>${esc(f.title)}</h1>
-          <p>${esc(f.synopsis)}</p>
-          <div class="btn-row">
-            <a class="btn primary" href="#/oku/${f.id}/${(state.progress[f.id]?.ch ?? 0) + 1}">${state.progress[f.id] ? "Okumaya devam et" : "Okumaya başla"}</a>
-            <a class="btn" href="#/seri/${f.id}">Detaylar</a>
+    return `<aside class="side">
+      <section class="panel">
+        <div class="panel-head"><h3>Popüler</h3>
+          <div class="tabs" role="tablist">
+            <button data-pop="week" class="active">Haftalık</button><button data-pop="month">Aylık</button><button data-pop="all">Tümü</button>
           </div>
         </div>
-        <div class="hero-art" style="background:linear-gradient(135deg, ${f.palette[1]}, ${f.palette[0]})">${coverArt(f)}</div>
+        <ol class="poplist" id="pop">${popularHTML("week")}</ol>
       </section>
-      ${cont.length ? `<section class="section"><div class="section-head"><h2>Okumaya devam et</h2><a class="count" href="#/kutuphane">Tümü →</a></div>${continueHTML(cont)}</section>` : ""}
-      <section class="section">
-        <div class="section-head"><h2>Tüm seriler</h2><span class="count" id="gridCount"></span></div>
-        <div class="filters">
-          <button class="chip" data-type="all">Tümü</button>
-          <button class="chip" data-type="manga">Manga</button>
-          <button class="chip" data-type="novel">Novel</button>
-          <span class="sep"></span>
-          <button class="chip" data-genre="">Her tür</button>
-          ${allGenres().map((g) => `<button class="chip" data-genre="${esc(g)}">${esc(g)}</button>`).join("")}
+      ${cont.length ? `<section class="panel"><div class="panel-head"><h3>Okumaya devam et</h3></div>${continueHTML(cont, true)}</section>` : ""}
+      ${SITE.discord ? `<a class="panel discord" href="${esc(SITE.discord)}" target="_blank" rel="noopener">${discordIcon}<span><b>Discord sunucumuz</b><small>Yeni bölüm duyuruları ve sohbet</small></span></a>` : ""}
+      ${SITE.donate ? `<a class="panel donate" href="${esc(SITE.donate)}" target="_blank" rel="noopener"><span><b>Bize destek ol</b><small>Bağışlar sitenin masraflarını karşılar</small></span></a>` : ""}
+    </aside>`;
+  }
+  function wireSidebar() {
+    app.querySelectorAll("[data-pop]").forEach((b) => b.addEventListener("click", () => {
+      app.querySelectorAll("[data-pop]").forEach((x) => x.classList.toggle("active", x === b));
+      document.getElementById("pop").innerHTML = popularHTML(b.dataset.pop);
+    }));
+  }
+
+  function slider(items) {
+    if (!items.length) return "";
+    return `<section class="slider" id="slider" aria-roledescription="carousel">
+      ${items.map((s, i) => `
+      <div class="slide ${i ? "" : "active"}" aria-hidden="${i ? "true" : "false"}">
+        <div class="slide-bg" style="--c1:${esc(s.palette[0])}">${coverArt(s)}</div>
+        <div class="slide-inner">
+          <a class="slide-cover cover" href="#/seri/${s.id}" tabindex="${i ? -1 : 0}">${coverArt(s)}</a>
+          <div class="slide-info">
+            <div class="tags"><span class="tag accent">${typeLabel(s.type)}</span>${s.genres.slice(0, 3).map((g) => `<span class="tag">${esc(g)}</span>`).join("")}</div>
+            <h2>${esc(s.title)}</h2>
+            <div class="slide-meta">${ratingHTML(s)}<span>${s.chapters.length} bölüm</span><span>${esc(s.status)}</span></div>
+            <p>${esc(s.synopsis)}</p>
+            <div class="btn-row">
+              <a class="btn primary" href="#/oku/${s.id}/${(state.progress[s.id]?.ch ?? 0) + 1}" tabindex="${i ? -1 : 0}">${state.progress[s.id] ? "Devam et" : "Okumaya başla"}</a>
+              <a class="btn ghost" href="#/seri/${s.id}" tabindex="${i ? -1 : 0}">Detaylar</a>
+            </div>
+          </div>
         </div>
+      </div>`).join("")}
+      ${items.length > 1 ? `
+      <button class="sl-btn prev" aria-label="Önceki"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button class="sl-btn next" aria-label="Sonraki"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <div class="sl-dots">${items.map((_, i) => `<button aria-label="${i + 1}. slayt" class="${i ? "" : "active"}"></button>`).join("")}</div>` : ""}
+    </section>`;
+  }
+  function wireSlider() {
+    const el = document.getElementById("slider");
+    if (!el) return null;
+    const slides = [...el.querySelectorAll(".slide")], dots = [...el.querySelectorAll(".sl-dots button")];
+    if (slides.length < 2) return null;
+    let cur = 0, timer;
+    const show = (n) => {
+      cur = (n + slides.length) % slides.length;
+      slides.forEach((s, i) => {
+        s.classList.toggle("active", i === cur);
+        s.setAttribute("aria-hidden", i !== cur);
+        s.querySelectorAll("a").forEach((a) => (a.tabIndex = i === cur ? 0 : -1));
+      });
+      dots.forEach((d, i) => d.classList.toggle("active", i === cur));
+    };
+    const play = () => { clearInterval(timer); if (!matchMedia("(prefers-reduced-motion: reduce)").matches) timer = setInterval(() => show(cur + 1), 6000); };
+    el.querySelector(".prev").onclick = () => { show(cur - 1); play(); };
+    el.querySelector(".next").onclick = () => { show(cur + 1); play(); };
+    dots.forEach((d, i) => (d.onclick = () => { show(i); play(); }));
+    el.addEventListener("mouseenter", () => clearInterval(timer));
+    el.addEventListener("mouseleave", play);
+    let x0 = null;
+    el.addEventListener("touchstart", (e) => (x0 = e.touches[0].clientX), { passive: true });
+    el.addEventListener("touchend", (e) => {
+      if (x0 == null) return;
+      const dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 40) { show(cur + (dx < 0 ? 1 : -1)); play(); }
+    });
+    play();
+    return () => clearInterval(timer);
+  }
+
+  const PAGE = 12;
+  function viewHome() {
+    const featured = CATALOG.filter((s) => s.featured).sort(byUpdate);
+    const slides = (featured.length ? featured : CATALOG.slice().sort(byUpdate)).slice(0, 5);
+    const latest = CATALOG.slice().sort(byUpdate);
+    let shown = PAGE;
+    app.innerHTML = `${slider(slides)}
+      <div class="wrap layout">
+        <div class="main">
+          <section class="section">
+            <div class="section-head"><h2>Son eklenen bölümler</h2><a class="more" href="#/seriler">Tüm seriler →</a></div>
+            <div class="updates" id="updates"></div>
+            <div class="load-more" id="loadMore"></div>
+          </section>
+        </div>
+        ${sidebar()}
+      </div>`;
+    const render = () => {
+      document.getElementById("updates").innerHTML = latest.slice(0, shown).map(updateCard).join("") || `<div class="empty">Henüz seri yok.</div>`;
+      document.getElementById("loadMore").innerHTML = latest.length > shown ? `<button class="btn">Daha fazla göster</button>` : "";
+      const b = document.querySelector("#loadMore button");
+      if (b) b.onclick = () => { shown += PAGE; render(); };
+    };
+    render();
+    wireSidebar();
+    return wireSlider();
+  }
+
+  // ---------- Seri listesi ----------
+  const list = { type: "all", status: "all", sort: "update", genres: new Set() };
+  function filtered() {
+    const q = norm(state.q.trim());
+    const out = CATALOG.filter((s) =>
+      (list.type === "all" || s.type === list.type) &&
+      (list.status === "all" || s.status === list.status) &&
+      [...list.genres].every((g) => s.genres.includes(g)) &&
+      (!q || norm([s.title, s.author, s.artist || "", ...s.genres].join(" ")).includes(q))
+    );
+    const sorts = {
+      update: byUpdate,
+      az: (a, b) => a.title.localeCompare(b.title, "tr"),
+      rating: (a, b) => (rating(b) ?? -1) - (rating(a) ?? -1),
+      chapters: (a, b) => b.chapters.length - a.chapters.length
+    };
+    return out.sort(sorts[list.sort] || byUpdate);
+  }
+  function renderGrid() {
+    const el = document.getElementById("grid");
+    if (!el) return;
+    const items = filtered();
+    el.innerHTML = items.length ? items.map(card).join("") : `<div class="empty" style="grid-column:1/-1">Aramana uygun seri bulunamadı.</div>`;
+    document.getElementById("gridCount").textContent = `${items.length} seri`;
+    app.querySelectorAll("[data-genre]").forEach((b) => b.classList.toggle("active", list.genres.has(b.dataset.genre)));
+  }
+  function viewList() {
+    const statuses = [...new Set(CATALOG.map((s) => s.status))].sort((a, b) => a.localeCompare(b, "tr"));
+    const sel = (key, opts) => `<select data-list="${key}" aria-label="${key}">${opts.map(([v, l]) => `<option value="${esc(v)}" ${list[key] === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+    app.innerHTML = `<div class="wrap">
+      <section class="section">
+        <div class="section-head"><h1 class="page-title">Seriler</h1><span class="count" id="gridCount"></span></div>
+        <div class="list-filters">
+          <label class="search inline"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="listSearch" type="search" placeholder="Seri, yazar, tür ara…" value="${esc(state.q)}"></label>
+          ${sel("type", [["all", "Tüm türler"], ["manga", "Manga"], ["novel", "Novel"]])}
+          ${sel("status", [["all", "Her durum"], ...statuses.map((s) => [s, s])])}
+          ${sel("sort", [["update", "Son güncellenen"], ["rating", "En yüksek puan"], ["az", "A → Z"], ["chapters", "Bölüm sayısı"]])}
+        </div>
+        <div class="filters">${allGenres().map((g) => `<button class="chip" data-genre="${esc(g)}">${esc(g)}</button>`).join("")}</div>
         <div class="grid" id="grid"></div>
       </section>
     </div>`;
-    app.querySelectorAll("[data-type]").forEach((b) => b.addEventListener("click", () => { state.type = b.dataset.type; renderGrid(); }));
-    app.querySelectorAll("[data-genre]").forEach((b) => b.addEventListener("click", () => { state.genre = b.dataset.genre || null; renderGrid(); }));
+    app.querySelectorAll("[data-list]").forEach((s) => s.addEventListener("change", () => { list[s.dataset.list] = s.value; renderGrid(); }));
+    app.querySelectorAll("[data-genre]").forEach((b) => b.addEventListener("click", () => {
+      const g = b.dataset.genre; list.genres.has(g) ? list.genres.delete(g) : list.genres.add(g); renderGrid();
+    }));
+    document.getElementById("listSearch").addEventListener("input", (e) => { state.q = searchInput.value = e.target.value; renderGrid(); });
     renderGrid();
   }
 
@@ -353,9 +533,11 @@
     const favs = CATALOG.filter((s) => state.favs.has(s.id));
     const cont = continueList(50);
     app.innerHTML = `<div class="wrap">
+      <h1 class="page-title" style="margin-top:28px">Kütüphanem</h1>
+      <p class="muted">Okuma geçmişin ve favorilerin bu tarayıcıda saklanır.</p>
       <section class="section">
         <div class="section-head"><h2>Okumaya devam et</h2><span class="count">${cont.length} seri</span></div>
-        ${cont.length ? continueHTML(cont) : `<div class="empty">Henüz bir şey okumadın. <a href="#/" style="color:var(--accent)">Keşfet</a> sayfasından bir seri seç.</div>`}
+        ${cont.length ? continueHTML(cont) : `<div class="empty">Henüz bir şey okumadın. <a href="#/seriler" class="link">Seriler</a> sayfasından başlayabilirsin.</div>`}
       </section>
       <section class="section">
         <div class="section-head"><h2>Favoriler</h2><span class="count">${favs.length} seri</span></div>
@@ -364,55 +546,106 @@
     </div>`;
   }
 
+  // ---------- Yorumlar (Giscus) ----------
+  const giscusOn = () => ["repo", "repoId", "category", "categoryId"].every((k) => SITE.giscus && SITE.giscus[k]);
+  function commentsHTML() {
+    return giscusOn() ? `<section class="comments wrap-narrow"><h2>Yorumlar</h2><div class="giscus" id="giscus"></div></section>` : "";
+  }
+  function mountComments(term) {
+    const el = document.getElementById("giscus");
+    if (!el || !giscusOn()) return;
+    const g = SITE.giscus, s = document.createElement("script");
+    const dark = root.dataset.theme !== "light";
+    Object.entries({
+      repo: g.repo, "repo-id": g.repoId, category: g.category, "category-id": g.categoryId,
+      mapping: "specific", term, strict: "1", "reactions-enabled": "1", "emit-metadata": "0",
+      "input-position": "top", theme: dark ? "dark_dimmed" : "light", lang: "tr", loading: "lazy"
+    }).forEach(([k, v]) => s.setAttribute("data-" + k, v));
+    s.src = "https://giscus.app/client.js";
+    s.crossOrigin = "anonymous";
+    s.async = true;
+    el.appendChild(s);
+  }
+
+  // ---------- Seri sayfası ----------
   function viewSeries(id) {
     const s = byId(id);
     if (!s) return notFound();
+    document.title = `${s.title} — ${SITE.name}`;
     const p = state.progress[s.id];
     const read = new Set(state.read[s.id] || []);
     const fav = state.favs.has(s.id);
-    const words = s.type === "novel" ? s.chapters.reduce((n, c) => n + c.paragraphs.join(" ").split(/\s+/).length, 0) : 0;
-    const pages = s.type === "manga" ? s.chapters.reduce((n, c) => n + (c.images || c.pages).length, 0) : 0;
-    app.innerHTML = `<div class="wrap"><div class="detail">
-      <div><div class="cover">${coverArt(s)}</div></div>
-      <div>
-        <span class="eyebrow">${typeLabel(s.type)} · ${esc(s.status)}</span>
-        <h1>${esc(s.title)}</h1>
-        <div class="author">${esc(s.author)} · ${s.year}</div>
-        <div class="tags">${s.genres.map((g) => `<span class="tag">${esc(g)}</span>`).join("")}</div>
-        <p class="synopsis">${esc(s.synopsis)}</p>
-        <div class="stats">
-          <div><b>${s.chapters.length}</b>bölüm</div>
-          ${s.type === "novel" ? `<div><b>~${Math.max(1, Math.round(words / 200))} dk</b>okuma süresi</div>` : `<div><b>${pages}</b>sayfa</div>`}
-          <div><b>%${readPct(s)}</b>okundu</div>
+    const last = s.chapters.length - 1;
+    let desc = true, q = "";
+    const info = [
+      ["Tür", typeLabel(s.type)], ["Durum", s.status], ["Yazar", s.author], s.artist ? ["Çizer", s.artist] : null,
+      ["Yıl", s.year], ["Bölüm", s.chapters.length], lastUpdate(s) ? ["Güncelleme", ago(lastUpdate(s))] : null
+    ].filter(Boolean);
+    app.innerHTML = `
+      <div class="series-banner"><div class="slide-bg" style="--c1:${esc(s.palette[0])}">${coverArt(s)}</div></div>
+      <div class="wrap">
+        <div class="detail">
+          <div class="detail-cover">
+            <div class="cover">${coverArt(s)}</div>
+            <button class="btn block ${fav ? "on" : ""}" id="favBtn" aria-pressed="${fav}">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+              <span>${fav ? "Favorilerde" : "Favorilere ekle"}</span>
+            </button>
+          </div>
+          <div class="detail-body">
+            <div class="tags"><span class="tag accent">${typeLabel(s.type)}</span>${s.genres.map((g) => `<span class="tag">${esc(g)}</span>`).join("")}</div>
+            <h1>${esc(s.title)}</h1>
+            ${rating(s) != null ? `<div class="big-rating">${star}<b>${rating(s).toFixed(1)}</b><span>/ 10</span></div>` : ""}
+            <p class="synopsis" id="synopsis">${esc(s.synopsis)}</p>
+            <dl class="info">${info.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
+            <div class="btn-row">
+              <a class="btn primary" href="#/oku/${s.id}/${(p?.ch ?? 0) + 1}">${p ? `Devam et · Bölüm ${esc(chNum(s, p.ch))}` : "İlk bölümü oku"}</a>
+              ${last > 0 ? `<a class="btn" href="#/oku/${s.id}/${last + 1}">Son bölüm · ${esc(chNum(s, last))}</a>` : ""}
+            </div>
+          </div>
         </div>
-        <div class="btn-row" style="margin-bottom:24px">
-          <a class="btn primary" href="#/oku/${s.id}/${(p?.ch ?? 0) + 1}">${p ? `Devam et · ${unitLabel(s)} ${p.ch + 1}` : "Okumaya başla"}</a>
-          <button class="btn ${fav ? "on" : ""}" id="favBtn" aria-pressed="${fav}">
-            <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
-            <span>${fav ? "Favorilerde" : "Favorilere ekle"}</span>
-          </button>
-        </div>
-        <ul class="chapters">${s.chapters.map((c, i) => `
-          <li class="${p?.ch === i ? "current" : ""} ${read.has(i) ? "done" : ""}"><a href="#/oku/${s.id}/${i + 1}">
-            <span class="num">${i + 1}</span><span class="ch-title">${esc(c.title)}</span>
-            <span class="read-mark">${p?.ch === i ? "Kaldığın yer" : read.has(i) ? "Okundu ✓" : ""}</span>
-          </a></li>`).join("")}
-        </ul>
+        <section class="section">
+          <div class="section-head"><h2>Bölümler</h2>
+            <div class="ch-tools">
+              <label class="search inline small"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="chSearch" type="search" placeholder="Bölüm ara…"></label>
+              <button class="icon-btn" id="chOrder" title="Sıralamayı değiştir" aria-label="Sıralamayı değiştir"><svg viewBox="0 0 24 24"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg></button>
+            </div>
+          </div>
+          <ul class="chapters" id="chList"></ul>
+        </section>
       </div>
-    </div></div>`;
+      ${commentsHTML()}`;
+    const renderChapters = () => {
+      const nq = norm(q.trim());
+      let rows = s.chapters.map((c, i) => ({ c, i })).filter(({ c, i }) => !nq || norm(`${chNum(s, i)} ${c.title}`).includes(nq));
+      if (desc) rows = rows.reverse();
+      document.getElementById("chList").innerHTML = rows.length ? rows.map(({ c, i }) => `
+        <li class="${p?.ch === i ? "current" : ""} ${read.has(i) ? "done" : ""}"><a href="#/oku/${s.id}/${i + 1}">
+          <span class="num">${esc(chNum(s, i))}</span>
+          <span class="ch-title">${esc(c.title)}${isNew(c) ? ` <span class="new">YENİ</span>` : ""}</span>
+          <span class="read-mark">${p?.ch === i ? "Kaldığın yer" : read.has(i) ? "Okundu ✓" : ""}</span>
+          <time>${ago(chTime(c))}</time>
+        </a></li>`).join("") : `<li class="pop-empty">Bölüm bulunamadı.</li>`;
+    };
+    renderChapters();
+    document.getElementById("chSearch").addEventListener("input", (e) => { q = e.target.value; renderChapters(); });
+    document.getElementById("chOrder").addEventListener("click", () => { desc = !desc; renderChapters(); });
     document.getElementById("favBtn").addEventListener("click", () => {
       state.favs.has(s.id) ? state.favs.delete(s.id) : state.favs.add(s.id);
       store.set("favs", [...state.favs]);
-      viewSeries(id);
+      const on = state.favs.has(s.id), b = document.getElementById("favBtn");
+      b.classList.toggle("on", on); b.setAttribute("aria-pressed", on);
+      b.querySelector("span").textContent = on ? "Favorilerde" : "Favorilere ekle";
     });
+    mountComments(`seri:${s.id}`);
   }
 
   function notFound() {
-    app.innerHTML = `<div class="wrap"><div class="empty" style="margin:48px 0">Aradığın sayfa bulunamadı. <a href="#/" style="color:var(--accent)">Ana sayfaya dön</a></div></div>`;
+    app.innerHTML = `<div class="wrap"><div class="empty" style="margin:48px 0">Aradığın sayfa bulunamadı. <a href="#/" class="link">Ana sayfaya dön</a></div></div>`;
   }
 
   // ---------- Reader ----------
-  let readerCleanup = null;
+  let viewCleanup = null;
 
   function readerBar(s, ci, settingsHTML) {
     return `<div class="reader-bar">
@@ -483,8 +716,8 @@
       <article class="novel" id="novel">
         <h1>${unitLabel(s)} ${ci + 1}</h1>
         <h2>${esc(c.title)}</h2>
-        ${c.paragraphs.map((p) => (p === "***" ? `<hr class="scene-break">` : `<p>${inline(p)}</p>`)).join("")}
-      </article>` + chapterNav(s, ci);
+        ${c.html != null ? c.html.replace(/<hr\s*\/?>/g, '<hr class="scene-break">') : c.paragraphs.map((p) => (p === "***" ? `<hr class="scene-break">` : `<p>${inline(p)}</p>`)).join("")}
+      </article>` + chapterNav(s, ci) + commentsHTML();
     const art = document.getElementById("novel");
     const apply = () => {
       art.style.setProperty("--fs", N.fs + "px");
@@ -529,7 +762,7 @@
       <div class="setting"><label>Okuma modu</label>${seg("mode", [["vertical", "Dikey kaydır"], ["paged", "Sayfa sayfa"]], M.mode)}</div>
       <div class="setting"><label>Yön (sayfa modu)</label>${seg("dir", [["rtl", "Sağdan sola"], ["ltr", "Soldan sağa"]], M.dir)}</div>
       <div class="setting"><label>Sayfa genişliği</label><input type="range" min="420" max="1100" step="20" value="${M.width}" data-key="width"></div>`;
-    app.innerHTML = readerBar(s, ci, settings) + `<section class="manga" id="manga"><div class="pages" id="pages"></div><div class="page-counter" id="pageCounter"></div></section>` + chapterNav(s, ci);
+    app.innerHTML = readerBar(s, ci, settings) + `<section class="manga" id="manga"><div class="pages" id="pages"></div><div class="page-counter" id="pageCounter"></div></section>` + chapterNav(s, ci) + commentsHTML();
 
     const wrapEl = document.getElementById("manga"), pagesEl = document.getElementById("pages"), counter = document.getElementById("pageCounter");
     const prev = state.progress[s.id];
@@ -593,17 +826,19 @@
     const s = byId(id);
     const ci = (parseInt(n, 10) || 1) - 1;
     if (!s || !s.chapters[ci]) return notFound();
-    document.title = `${s.title} · ${s.chapters[ci].title} — Kitaplık`;
-    readerCleanup = s.type === "novel" ? viewNovel(s, ci) : viewManga(s, ci);
+    document.title = `${s.title} · Bölüm ${chNum(s, ci)} — ${SITE.name}`;
+    viewCleanup = s.type === "novel" ? viewNovel(s, ci) : viewManga(s, ci);
+    mountComments(`bolum:${s.id}:${chNum(s, ci)}`);
   }
 
   // ---------- Router ----------
   function route() {
-    if (readerCleanup) { readerCleanup(); readerCleanup = null; }
+    if (viewCleanup) { viewCleanup(); viewCleanup = null; }
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
-    document.title = "Kitaplık — Manga & Novel Okuma";
+    document.title = `${SITE.name} — ${SITE.tagline || "Manga & Novel Okuma"}`;
     let nav = null;
-    if (!parts.length) { nav = "home"; viewHome(); }
+    if (!parts.length) { nav = "home"; viewCleanup = viewHome(); }
+    else if (parts[0] === "seriler") { nav = "list"; viewList(); }
     else if (parts[0] === "kutuphane") { nav = "library"; viewLibrary(); }
     else if (parts[0] === "seri") viewSeries(parts[1]);
     else if (parts[0] === "oku") viewReader(parts[1], parts[2]);
@@ -613,18 +848,34 @@
     app.focus({ preventScroll: true });
   }
 
+  // Üst bardaki arama seri listesine götürür
   searchInput.addEventListener("input", () => {
     state.q = searchInput.value;
-    if (location.hash && location.hash !== "#/") location.hash = "#/";
-    else renderGrid();
+    if (!location.hash.startsWith("#/seriler")) location.hash = "#/seriler";
+    else {
+      const ls = document.getElementById("listSearch");
+      if (ls) ls.value = state.q;
+      renderGrid();
+    }
   });
   addEventListener("hashchange", route);
+
+  // Site ayarlarından gelen bağlantılar
+  document.querySelectorAll("[data-site]").forEach((el) => {
+    const v = SITE[el.dataset.site];
+    el.hidden = !v;
+    if (!v) return;
+    el.href = el.dataset.site === "contact" ? `mailto:${v}` : v;
+  });
+  document.querySelectorAll("[data-site-name]").forEach((el) => (el.textContent = SITE.name));
 
   fetch("catalog.json", { cache: "no-cache" })
     .then((r) => (r.ok ? r.json() : []))
     .catch(() => [])
     .then((extra) => {
-      for (const s of extra) {
+      for (const raw of Array.isArray(extra) ? extra : []) {
+        const s = normalize(raw);
+        if (!s.chapters.length) continue;
         const i = CATALOG.findIndex((x) => x.id === s.id);
         if (i >= 0) CATALOG[i] = s; else CATALOG.push(s);
       }

@@ -1,6 +1,7 @@
 ---
 series: son-tren
 number: 1
+released: 2026-09-10
 title: "Bilet"
 ---
 Orhan saatine baktı. 23:46. Peronun ucundaki lamba her zamanki gibi iki kez göz kırptı, sonra sabitlendi. Otuz yıldır bu lambanın tamir edilmesini bekliyordu ve otuz yıldır kimse tamir etmemişti.

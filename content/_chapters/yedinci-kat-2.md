@@ -1,6 +1,7 @@
 ---
 series: yedinci-kat
 number: 2
+released: 2026-10-16
 title: "Kütüphaneci"
 ---
 Adının Rüzgâr olduğunu söyledi, ama bunu söylerken yüzünü buruşturdu, sanki ismi ona sonradan yakıştırılmış bir ceketmiş gibi.

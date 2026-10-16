@@ -18,9 +18,12 @@ window.CATALOG = [
     palette: ["#1b2a6b", "#f2c14e"],
     synopsis:
       "Her gece aya bir fener yakılmazsa şehir karanlığa gömülür. On altı yaşındaki Ela, kuledeki son bekçinin kaybolduğu gece feneri yakmak zorunda kalır — ve ışığın gölgede bir şeyleri uyandırdığını fark eder.",
+    artist: "Deniz Kaya",
+    rating: 9.1,
     chapters: [
       {
         title: "Fener",
+        released: "2026-09-02",
         pages: [
           [
             { scene: "night", text: "Bu şehirde kimse geceleri yukarı bakmaz.", speaker: "Anlatıcı" },
@@ -43,6 +46,7 @@ window.CATALOG = [
       },
       {
         title: "Gölgedeki Ses",
+        released: "2026-09-23",
         pages: [
           [
             { scene: "night", text: "Kimsin sen? Çık ortaya!", speaker: "Ela" },
@@ -59,6 +63,7 @@ window.CATALOG = [
       },
       {
         title: "Basamaklar",
+        released: "2026-10-14",
         pages: [
           [
             { scene: "sky", text: "Ayın öbür yüzüne nasıl gidilir ki?", speaker: "Ela" },
@@ -84,9 +89,12 @@ window.CATALOG = [
     palette: ["#b23a48", "#fcb9b2"],
     synopsis:
       "Emekli bir mutfak robotu, kapanmak üzere olan bir mahalle lokantasında ikinci bir şans bulur. Tek sorun: tat almıyor ve tarifleri kendi kafasına göre 'optimize' ediyor.",
+    artist: "Burak Yıldız",
+    rating: 8.4,
     chapters: [
       {
         title: "Yeniden Başlatılıyor",
+        released: "2026-08-11",
         pages: [
           [
             { scene: "room", text: "Lokantayı kurtarmak için bir aşçıya ihtiyacımız var, Zehra Abla.", speaker: "Can" },
@@ -105,6 +113,7 @@ window.CATALOG = [
       },
       {
         title: "Soğan Meselesi",
+        released: "2026-08-25",
         pages: [
           [
             { scene: "city", text: "Mahallede iki parti var artık: Soğanlılar ve soğansızlar.", speaker: "Can" },
@@ -129,9 +138,12 @@ window.CATALOG = [
     palette: ["#0077b6", "#90e0ef"],
     synopsis:
       "Küçük bir Ege kasabasında, takımı dağılmak üzere olan lise yüzme kulübü. Denizden korkan yeni öğrenci Arda, takımın son umudu olduğunu öğrenince işler karışır.",
+    artist: "Kerem Öz",
+    rating: 8.8,
     chapters: [
       {
         title: "Tuzlu Su",
+        released: "2026-10-05",
         pages: [
           [
             { scene: "sea", text: "Bu kasabada herkes yüzmeyi bilir.", speaker: "Anlatıcı" },
@@ -150,6 +162,7 @@ window.CATALOG = [
       },
       {
         title: "Nefes",
+        released: "2026-10-15",
         pages: [
           [
             { scene: "sea", text: "Suyun altında ne duyuyorsun?", speaker: "Koç Sinan" },

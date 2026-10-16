@@ -21,7 +21,7 @@ collections:
     label: Seriler
     label_singular: Seri
     description: Önce seriyi oluştur, sonra "Bölümler"den bölüm ekle.
-    folder: content/series
+    folder: content/_series
     create: true
     slug: "{{slug}}"
     identifier_field: title
@@ -34,6 +34,7 @@ collections:
         options: [{ label: Novel, value: novel }, { label: Manga, value: manga }]
         default: novel
       - { name: author, label: Yazar, widget: string }
+      - { name: artist, label: Çizer (manga), widget: string, required: false }
       - name: genres
         label: Kategoriler
         widget: select
@@ -46,6 +47,8 @@ collections:
         default: Devam ediyor
       - { name: year, label: Yıl, widget: number, value_type: int }
       - { name: synopsis, label: Özet, widget: text }
+      - { name: rating, label: Puan (0–10), widget: number, value_type: float, min: 0, max: 10, step: 0.1, required: false }
+      - { name: featured, label: Ana sayfa slider'ında göster, widget: boolean, default: false, required: false }
       - { name: cover, label: Kapak görseli (isteğe bağlı), widget: image, required: false, hint: "Boş bırakırsan renklerden otomatik kapak üretilir. 2:3 oranında bir görsel önerilir." }
       - { name: color, label: Kapak rengi, widget: color, default: "#3d405b", required: false }
       - { name: accent, label: Yazı rengi, widget: color, default: "#f2cc8f", required: false }
@@ -53,7 +56,7 @@ collections:
   - name: chapters
     label: Bölümler
     label_singular: Bölüm
-    folder: content/chapters
+    folder: content/_chapters
     create: true
     slug: "{{series}}-{{number}}"
     identifier_field: title
@@ -71,6 +74,7 @@ collections:
         display_fields: [title]
       - { name: number, label: Bölüm numarası, widget: number, value_type: int, min: 1 }
       - { name: title, label: Bölüm başlığı, widget: string }
+      - { name: released, label: Yayın tarihi, widget: datetime, required: false, hint: "Son eklenenler listesinde ve 'YENİ' etiketinde kullanılır." }
       - { name: draft, label: Taslak (sitede gösterme), widget: boolean, default: false, required: false }
       - name: body
         label: Bölüm metni (novel)

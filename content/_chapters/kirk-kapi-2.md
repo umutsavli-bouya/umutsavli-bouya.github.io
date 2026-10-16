@@ -1,6 +1,7 @@
 ---
 series: kirk-kapi
 number: 2
+released: 2026-07-20
 title: "Otuz Dokuzuncu Kapı"
 ---
 Gece yarısı, han uyurken, Gülbahar fenerini aldı ve uzun koridorun sonuna yürüdü. Kapılar birer birer yanından geçti; bazılarının altından ışık sızıyordu, bazılarından müzik, birinden de deniz sesi.

@@ -1,6 +1,7 @@
 ---
 series: yedinci-kat
 number: 1
+released: 2026-10-01
 title: "Fazladan Bir Basamak"
 ---
 Apartman altı katlıydı. Defne bunu biliyordu, çünkü yeni taşındıkları bu binanın tabelasında açıkça yazıyordu: Gül Apartmanı, 6 kat, 12 daire. Asansör de altıya kadar gidiyordu. Ama merdivenler gitmiyordu.

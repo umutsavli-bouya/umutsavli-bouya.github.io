@@ -1,0 +1,20 @@
+# GitHub Pages bu siteyi Jekyll ile derler. Jekyll'in tek işi content/ altındaki
+# Markdown dosyalarından catalog.json üretmek; geri kalan dosyalar olduğu gibi kopyalanır.
+title: Kitaplık
+collections_dir: content
+collections:
+  series:
+    output: false
+  chapters:
+    output: false
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+exclude:
+  - README.md
+  - LICENSE
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor

@@ -9,5 +9,6 @@ status: "Devam ediyor"
 year: 2026
 color: "#2d3142"
 accent: "#ef8354"
+rating: 8.9
 synopsis: "Her gece 23:47'de kalkan son trende hep aynı yolcular vardır. Kondüktör Orhan, bir gece listede olmayan bir yolcuyla karşılaşınca, otuz yıldır aynı geceyi yaşadığını fark etmeye başlar."
 ---

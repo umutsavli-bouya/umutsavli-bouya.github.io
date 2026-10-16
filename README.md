@@ -1,7 +1,7 @@
 # Kitaplık — Manga & Novel Okuma Sitesi
 
 GitHub Pages üzerinde çalışan statik bir okuma sitesi. İçerik `content/` klasöründeki
-Markdown dosyalarından üretilir; ister yönetim panelinden, ister doğrudan GitHub'dan yüklenebilir.
+Markdown dosyalarından GitHub Pages'in kendi derleyicisi (Jekyll) tarafından üretilir; ister yönetim panelinden, ister doğrudan GitHub'dan yüklenebilir.
 
 ## Özellikler
 - **Keşfet:** Günün serisi, manga/novel ve türe göre filtre, anlık arama
@@ -9,17 +9,33 @@ Markdown dosyalarından üretilir; ister yönetim panelinden, ister doğrudan Gi
 - **Novel okuyucu:** Yazı boyutu, satır aralığı, serif/sans, sepya/gece sayfası, kaldığın yeri hatırlama
 - **Manga okuyucu:** Dikey kaydırma veya sayfa sayfa, sağdan sola / soldan sağa, klavye okları
 - **Kütüphanem:** Okumaya devam et ve favoriler (tarayıcıda saklanır)
+- **Ana sayfa:** Öne çıkan seriler slider'ı, son eklenen bölümler (YENİ etiketi ve "2 gün önce" gibi zamanlar), haftalık/aylık/tüm zamanlar popüler listesi
+- **Seri listesi:** Arama, tür, durum ve kategori filtreleri, sıralama (son güncellenen, puan, A–Z, bölüm sayısı)
+- **Yorumlar:** Seri ve bölüm sayfalarında Giscus ile yorum (isteğe bağlı)
 - **Yönetim paneli:** `/admin` adresinden seri ve bölüm ekleme
+
+## Site ayarları (`config.js`)
+Site adı, Discord, bağış ve iletişim bağlantıları `config.js` içinde. Boş bırakılan
+bağlantılar sitede gösterilmez. İletişim adresi alt bilgide "İletişim & telif bildirimi"
+olarak görünür.
+
+### Yorumları açmak (Giscus, ücretsiz)
+Yorumlar GitHub Discussions'ta saklanır; okurlar GitHub hesabıyla yorum yapar.
+1. Repo → Settings → General → Features → **Discussions**'ı aç.
+2. Discussions sekmesinde **"Yorumlar"** adlı bir kategori oluştur (tür: Announcement önerilir).
+3. https://github.com/apps/giscus adresinden Giscus uygulamasını bu repoya kur.
+4. https://giscus.app sayfasında repo adını gir, "Yorumlar" kategorisini seç. Sayfanın verdiği
+   `data-repo-id` ve `data-category-id` değerlerini `config.js` içindeki `repoId` ve `categoryId` alanlarına yaz.
 
 ## İçerik yapısı
 ```
 content/
-  series/son-tren.md        ← seri bilgileri (dosya adı = seri kimliği)
-  chapters/son-tren-1.md    ← bölümler
+  _series/son-tren.md        ← seri bilgileri (dosya adı = seri kimliği)
+  _chapters/son-tren-1.md    ← bölümler
   media/                    ← kapak ve manga sayfa görselleri
 ```
 
-**Seri dosyası** (`content/series/<seri-id>.md`):
+**Seri dosyası** (`content/_series/<seri-id>.md`):
 ```markdown
 ---
 title: "Son Tren 23:47"
@@ -29,18 +45,22 @@ genres: [Gizem, Dram]
 status: Devam ediyor
 year: 2026
 synopsis: "Kısa özet…"
+artist: "Çizer adı"               # isteğe bağlı (manga)
+rating: 8.7                       # isteğe bağlı, 0–10
+featured: true                    # ana sayfa slider'ında göster
 cover: /content/media/kapak.jpg   # isteğe bağlı; yoksa otomatik kapak üretilir
 color: "#2d3142"                  # otomatik kapak rengi
 accent: "#ef8354"                 # otomatik kapak yazı rengi
 ---
 ```
 
-**Novel bölümü** (`content/chapters/<seri-id>-<numara>.md`):
+**Novel bölümü** (`content/_chapters/<seri-id>-<numara>.md`):
 ```markdown
 ---
 series: son-tren
 number: 4
 title: "Bölüm başlığı"
+released: 2026-10-16        # yayın tarihi; "son eklenenler" ve YENİ etiketi için
 draft: false                # true ise sitede görünmez
 ---
 Paragraflar arasında boş satır bırak. **Kalın** ve *italik* desteklenir.
@@ -67,19 +87,19 @@ pages:
    Panel dosyayı repoya kaydeder; site 1–2 dakika içinde güncellenir.
 
 ### B) GitHub'dan doğrudan
-Repo sayfasında `content/chapters` klasörüne gir → **Add file → Create new file / Upload files**,
+Repo sayfasında `content/_chapters` klasörüne gir → **Add file → Create new file / Upload files**,
 yukarıdaki biçimde bir `.md` dosyası ekle ve commit et.
 
 ## Yayın nasıl çalışıyor
-Site doğrudan `main` dalından yayınlanır, ek bir ayar gerekmez. `content/` içinde bir dosya
-değişince `.github/workflows/pages.yml` `catalog.json`'u yeniden üretip commit'ler ve site
-1–2 dakika içinde güncellenir. Bir dosyada hata varsa (ör. olmayan bir seriye bölüm) Actions
-sekmesinde iş kırmızı olur, hangi dosyada ne sorun olduğu yazar; site eski hâliyle açık kalır.
+Site doğrudan `main` dalından yayınlanır; ek ayar veya GitHub Actions gerekmez. GitHub Pages
+her push'ta siteyi Jekyll ile derler ve `catalog.json` şablonu `content/` içindeki tüm seri ve
+bölümlerden kataloğu üretir. Yeni bir bölüm 1–2 dakika içinde sitede görünür.
+Taslak (`draft: true`) bölümler ve hiç bölümü olmayan seriler gösterilmez.
 
 ## Bilgisayarda çalıştırmak
 ```bash
-npm install
-npm run dev     # catalog.json üretir ve http://localhost:8080 adresinde açar
+gem install jekyll -v 3.10.0 kramdown-parser-gfm webrick
+jekyll serve      # http://localhost:4000
 ```
 
 ## İçerik hakları

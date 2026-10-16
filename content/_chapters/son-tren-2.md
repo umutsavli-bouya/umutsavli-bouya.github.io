@@ -1,6 +1,7 @@
 ---
 series: son-tren
 number: 2
+released: 2026-09-24
 title: "Yolcu Listesi"
 ---
 Kondüktör kulübesinde, çaydanlığın tıkırtısı arasında Orhan yolcu listesini üçüncü kez okudu. Liste her gece aynıydı: dört isim, dört koltuk numarası. Kızın adı yoktu.

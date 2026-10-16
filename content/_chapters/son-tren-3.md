@@ -1,6 +1,7 @@
 ---
 series: son-tren
 number: 3
+released: 2026-10-12
 title: "Gazete"
 ---
 Son vagondaki adam gazetesini indirmedi. Orhan otuz yıldır onun yüzünü sadece gazetenin üstünden, kaşlarına kadar görmüştü.

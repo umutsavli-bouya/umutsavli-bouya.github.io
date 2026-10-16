@@ -15,10 +15,11 @@
   <header class="topbar" id="topbar">
     <a href="#/" class="brand" aria-label="Ana sayfa">
       <span class="brand-mark" aria-hidden="true"></span>
-      <span>Kitaplık</span>
+      <span data-site-name>Kitaplık</span>
     </a>
     <nav class="nav">
-      <a href="#/" data-nav="home">Keşfet</a>
+      <a href="#/" data-nav="home">Ana Sayfa</a>
+      <a href="#/seriler" data-nav="list">Seriler</a>
       <a href="#/kutuphane" data-nav="library">Kütüphanem</a>
     </nav>
     <div class="topbar-actions">
@@ -26,6 +27,9 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="search" type="search" placeholder="Seri, yazar, tür ara…" autocomplete="off">
       </label>
+      <a class="icon-btn discord-btn" data-site="discord" target="_blank" rel="noopener" title="Discord" aria-label="Discord" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M19.3 5.3A16.6 16.6 0 0 0 15.2 4l-.5 1a15.4 15.4 0 0 0-5.4 0l-.5-1a16.6 16.6 0 0 0-4.1 1.3C2.1 9.2 1.4 13 1.7 16.8a16.8 16.8 0 0 0 5 2.5l1.1-1.7a10.8 10.8 0 0 1-1.7-.8l.4-.3a11.9 11.9 0 0 0 11 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.7a16.7 16.7 0 0 0 5-2.5c.4-4.4-.7-8.2-3-11.5zM8.7 14.5c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2z"/></svg>
+      </a>
       <button class="icon-btn" id="themeToggle" title="Temayı değiştir" aria-label="Temayı değiştir">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
       </button>
@@ -35,9 +39,23 @@
   <main id="app" tabindex="-1"></main>
 
   <footer class="footer" id="footer">
-    <p>Kitaplık · Tüm örnek seriler bu site için yazılmış özgün içeriklerdir.</p>
+    <div class="footer-inner">
+      <div>
+        <a href="#/" class="brand small"><span class="brand-mark" aria-hidden="true"></span><span data-site-name>Kitaplık</span></a>
+        <p>Manga ve novel serilerini ücretsiz okuyabileceğin bir okuma sitesi.</p>
+      </div>
+      <nav class="footer-links">
+        <a href="#/seriler">Seriler</a>
+        <a href="#/kutuphane">Kütüphanem</a>
+        <a data-site="discord" target="_blank" rel="noopener" hidden>Discord</a>
+        <a data-site="donate" target="_blank" rel="noopener" hidden>Destek ol</a>
+        <a data-site="contact" hidden>İletişim &amp; telif bildirimi</a>
+      </nav>
+    </div>
+    <p class="footer-note">Sitedeki tüm içerikler hak sahiplerinin izniyle yayınlanır. Bir içeriğin size ait olduğunu düşünüyorsanız iletişim adresinden bize ulaşın.</p>
   </footer>
 
+  <script src="config.js"></script>
   <script src="data.js"></script>
   <script src="app.js"></script>
 </body>
