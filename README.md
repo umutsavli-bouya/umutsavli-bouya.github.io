@@ -11,6 +11,7 @@ Markdown dosyalarından GitHub Pages'in kendi derleyicisi (Jekyll) tarafından �
 - **Kütüphanem:** Okumaya devam et ve favoriler (tarayıcıda saklanır)
 - **Ana sayfa:** Öne çıkan seriler slider'ı, son eklenen bölümler (YENİ etiketi ve "2 gün önce" gibi zamanlar), haftalık/aylık/tüm zamanlar popüler listesi
 - **Seri listesi:** Arama, tür, durum ve kategori filtreleri, sıralama (son güncellenen, puan, A–Z, bölüm sayısı)
+- **Duyurular:** Ana sayfanın sağında (mobilde en üstte) duyuru kutusu; yönetim panelindeki "Duyurular"dan eklenir
 - **Yorumlar:** Seri ve bölüm sayfalarında Giscus ile yorum (isteğe bağlı)
 - **Yönetim paneli:** `/admin` adresinden seri ve bölüm ekleme
 
@@ -76,6 +77,20 @@ pages:
   - /content/media/ay-bekcisi-4-01.jpg
   - /content/media/ay-bekcisi-4-02.jpg
 ```
+
+**Duyuru** (`content/_announcements/<tarih>-<ad>.md`):
+```markdown
+---
+title: "Editör ve çevirmen alımları açık"
+date: 2026-10-16T12:00:00+03:00
+kind: important             # important = altın çerçeve, info = normal
+link: "https://forms.gle/..." # isteğe bağlı
+link_text: "Başvur"
+active: true                # false ise gösterilmez
+---
+Kısa duyuru metni.
+```
+En yeni 4 duyuru gösterilir.
 
 ## Bölüm yüklemenin 2 yolu
 

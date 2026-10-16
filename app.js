@@ -369,9 +369,32 @@
 
   const discordIcon = `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M19.3 5.3A16.6 16.6 0 0 0 15.2 4l-.5 1a15.4 15.4 0 0 0-5.4 0l-.5-1a16.6 16.6 0 0 0-4.1 1.3C2.1 9.2 1.4 13 1.7 16.8a16.8 16.8 0 0 0 5 2.5l1.1-1.7a10.8 10.8 0 0 1-1.7-.8l.4-.3a11.9 11.9 0 0 0 11 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.7a16.7 16.7 0 0 0 5-2.5c.4-4.4-.7-8.2-3-11.5zM8.7 14.5c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2z"/></svg>`;
 
+  // Duyurular (announcements.json)
+  let ANNOUNCEMENTS = [];
+  const safeHref = (u) => (/^(https?:\/\/|#\/|mailto:)/i.test(u || "") ? u : "");
+  function announcementsHTML() {
+    if (!ANNOUNCEMENTS.length) return "";
+    return `<section class="panel notices">
+      <div class="panel-head"><h3><span class="glyph" aria-hidden="true">✦</span>Duyurular</h3></div>
+      <ul class="notice-list">${ANNOUNCEMENTS.slice(0, 4).map((a) => {
+        const href = safeHref(a.link);
+        const ext = /^https?:/i.test(href);
+        return `<li class="notice ${a.kind === "important" ? "important" : ""}">
+          <b>${esc(a.title || "")}</b>
+          ${a.text ? `<p>${esc(a.text)}</p>` : ""}
+          <div class="notice-foot">
+            <time>${ago(Date.parse(a.date) || 0)}</time>
+            ${href ? `<a href="${esc(href)}" ${ext ? 'target="_blank" rel="noopener"' : ""}>${esc(a.linkText || "Detaylar")} →</a>` : ""}
+          </div>
+        </li>`;
+      }).join("")}</ul>
+    </section>`;
+  }
+
   function sidebar() {
     const cont = continueList(3);
     return `<aside class="side">
+      ${announcementsHTML()}
       <section class="panel">
         <div class="panel-head"><h3>Popüler</h3>
           <div class="tabs" role="tablist">
@@ -869,10 +892,10 @@
   });
   document.querySelectorAll("[data-site-name]").forEach((el) => (el.textContent = SITE.name));
 
-  fetch("catalog.json", { cache: "no-cache" })
-    .then((r) => (r.ok ? r.json() : []))
-    .catch(() => [])
-    .then((extra) => {
+  const getJSON = (url) => fetch(url, { cache: "no-cache" }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
+  Promise.all([getJSON("catalog.json"), getJSON("announcements.json")])
+    .then(([extra, notices]) => {
+      ANNOUNCEMENTS = (Array.isArray(notices) ? notices : []).filter((a) => a && a.title);
       for (const raw of Array.isArray(extra) ? extra : []) {
         const s = normalize(raw);
         if (!s.chapters.length) continue;
