@@ -89,3 +89,26 @@ collections:
         required: false
         hint: "Manga bölümleri için sayfaları okunma sırasına göre ekle."
         field: { name: image, label: Sayfa, widget: image }
+
+  - name: announcements
+    label: Duyurular
+    label_singular: Duyuru
+    description: Ana sayfanın sağındaki "Duyurular" kutusunda görünür.
+    folder: content/_announcements
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    identifier_field: title
+    summary: "{{title}}"
+    sortable_fields: [date, title]
+    fields:
+      - { name: title, label: Başlık, widget: string }
+      - { name: date, label: Tarih, widget: datetime }
+      - name: kind
+        label: Önem
+        widget: select
+        options: [{ label: Normal, value: info }, { label: Önemli (altın çerçeve), value: important }]
+        default: info
+      - { name: link, label: Bağlantı (isteğe bağlı), widget: string, required: false, hint: "Ör. Discord daveti, başvuru formu veya bir seri sayfası (#/seri/seri-id)" }
+      - { name: link_text, label: Bağlantı yazısı, widget: string, required: false, default: "Detaylar" }
+      - { name: active, label: Yayında, widget: boolean, default: true }
+      - { name: body, label: Metin, widget: text, required: false }

@@ -1,0 +1,13 @@
+---
+layout: null
+---
+{%- comment -%}
+  content/_announcements içindeki duyurulardan liste üretir. En yenisi en üstte.
+{%- endcomment -%}
+{%- assign items = site.announcements | where_exp: "a", "a.active != false" | sort: "date" | reverse -%}
+[
+{%- for a in items limit: 10 -%}
+{"title":{{ a.title | jsonify }},"date":{{ a.date | date: "%Y-%m-%dT%H:%M:%S%:z" | jsonify }},"kind":{{ a.kind | default: "info" | jsonify }},"link":{{ a.link | jsonify }},"linkText":{{ a.link_text | jsonify }},"text":{{ a.content | strip | strip_html | jsonify }}}
+{%- unless forloop.last -%},{%- endunless -%}
+{%- endfor -%}
+]
