@@ -1,4 +1,4 @@
-# Kitaplık — Manga & Novel Okuma Sitesi
+# HopeScans — Manga & Novel Okuma Sitesi
 
 GitHub Pages üzerinde çalışan statik bir okuma sitesi. İçerik `content/` klasöründeki
 Markdown dosyalarından GitHub Pages'in kendi derleyicisi (Jekyll) tarafından üretilir; ister yönetim panelinden, ister doğrudan GitHub'dan yüklenebilir.
@@ -11,12 +11,13 @@ Markdown dosyalarından GitHub Pages'in kendi derleyicisi (Jekyll) tarafından �
 - **Kütüphanem:** Okumaya devam et ve favoriler (tarayıcıda saklanır)
 - **Ana sayfa:** Öne çıkan seriler slider'ı, son eklenen bölümler (YENİ etiketi ve "2 gün önce" gibi zamanlar), haftalık/aylık/tüm zamanlar popüler listesi
 - **Seri listesi:** Arama, tür, durum ve kategori filtreleri, sıralama (son güncellenen, puan, A–Z, bölüm sayısı)
+- **Blog, SSS ve Ekibe Katıl sayfaları:** Blog yazıları panelden yazılır; SSS ve ekip başvuru metni `config.js`'te
 - **Duyurular:** Ana sayfanın sağında (mobilde en üstte) duyuru kutusu; yönetim panelindeki "Duyurular"dan eklenir
 - **Yorumlar:** Seri ve bölüm sayfalarında Giscus ile yorum (isteğe bağlı)
 - **Yönetim paneli:** `/admin` adresinden seri ve bölüm ekleme
 
 ## Site ayarları (`config.js`)
-Site adı, Discord, bağış ve iletişim bağlantıları `config.js` içinde. Boş bırakılan
+Site adı, Discord, X (Twitter), Instagram, bağış ve iletişim bağlantıları, SSS soruları ve "Ekibe Katıl" metni/başvuru bağlantısı `config.js` içinde. Boş bırakılan
 bağlantılar sitede gösterilmez. İletişim adresi alt bilgide "İletişim & telif bildirimi"
 olarak görünür.
 
@@ -91,6 +92,20 @@ active: true                # false ise gösterilmez
 Kısa duyuru metni.
 ```
 En yeni 4 duyuru gösterilir.
+
+**Blog yazısı** (`content/_blog/<tarih>-<ad>.md`):
+```markdown
+---
+title: "Yazı başlığı"
+date: 2026-10-17T12:00:00+03:00
+author: "HopeScans Ekibi"
+excerpt_text: "İsteğe bağlı kısa özet"
+draft: false
+---
+Yazının metni (Markdown).
+```
+
+Seriler için `banner:` alanına geniş bir görsel verirsen ana sayfa slider'ında arka plan olarak kullanılır.
 
 ## Bölüm yüklemenin 2 yolu
 
