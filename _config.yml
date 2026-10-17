@@ -1,6 +1,6 @@
 # GitHub Pages bu siteyi Jekyll ile derler. Jekyll'in tek işi content/ altındaki
 # Markdown dosyalarından catalog.json üretmek; geri kalan dosyalar olduğu gibi kopyalanır.
-title: Kitaplık
+title: HopeScans
 collections_dir: content
 collections:
   series:
@@ -8,6 +8,8 @@ collections:
   chapters:
     output: false
   announcements:
+    output: false
+  blog:
     output: false
 markdown: kramdown
 kramdown:

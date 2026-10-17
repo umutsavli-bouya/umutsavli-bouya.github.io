@@ -1,4 +1,4 @@
-# Kitaplık yönetim paneli ayarları (Sveltia / Decap CMS)
+# HopeScans yönetim paneli ayarları (Sveltia / Decap CMS)
 # Panel: https://umutsavli-bouya.github.io/admin/
 backend:
   name: github
@@ -50,6 +50,7 @@ collections:
       - { name: rating, label: Puan (0–10), widget: number, value_type: float, min: 0, max: 10, step: 0.1, required: false }
       - { name: featured, label: Ana sayfa slider'ında göster, widget: boolean, default: false, required: false }
       - { name: cover, label: Kapak görseli (isteğe bağlı), widget: image, required: false, hint: "Boş bırakırsan renklerden otomatik kapak üretilir. 2:3 oranında bir görsel önerilir." }
+      - { name: banner, label: Slider arka plan görseli (isteğe bağlı), widget: image, required: false, hint: "Geniş (16:9) bir görsel önerilir. Boşsa kapak kullanılır." }
       - { name: color, label: Kapak rengi, widget: color, default: "#3d405b", required: false }
       - { name: accent, label: Yazı rengi, widget: color, default: "#f2cc8f", required: false }
 
@@ -112,3 +113,21 @@ collections:
       - { name: link_text, label: Bağlantı yazısı, widget: string, required: false, default: "Detaylar" }
       - { name: active, label: Yayında, widget: boolean, default: true }
       - { name: body, label: Metin, widget: text, required: false }
+
+  - name: blog
+    label: Blog
+    label_singular: Yazı
+    description: Blog sayfasında ve ana sayfadaki "Son Yazılar" kutusunda görünür.
+    folder: content/_blog
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    identifier_field: title
+    summary: "{{title}} — {{author}}"
+    sortable_fields: [date, title]
+    fields:
+      - { name: title, label: Başlık, widget: string }
+      - { name: date, label: Tarih, widget: datetime }
+      - { name: author, label: Yazar, widget: string }
+      - { name: excerpt_text, label: Kısa özet, widget: text, required: false, hint: "Boşsa yazının başından otomatik alınır." }
+      - { name: draft, label: Taslak, widget: boolean, default: false, required: false }
+      - { name: body, label: Yazı, widget: markdown }

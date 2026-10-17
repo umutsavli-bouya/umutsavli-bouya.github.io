@@ -51,7 +51,7 @@
     const chapters = (s.chapters || []).filter((c) => (type === "manga" ? c.images && c.images.length : c.html || c.paragraphs));
     return {
       id: String(s.id), type, title: String(s.title || s.id), author: String(s.author || "Bilinmeyen yazar"),
-      artist: s.artist || null, rating: s.rating ?? null, featured: !!s.featured,
+      artist: s.artist || null, rating: s.rating ?? null, featured: !!s.featured, banner: s.banner || null,
       genres: [].concat(s.genres || []).map(String), status: s.status || "Devam ediyor",
       year: s.year || new Date().getFullYear(),
       palette: [(s.palette && s.palette[0]) || "#3d405b", (s.palette && s.palette[1]) || "#f2cc8f"],
@@ -275,14 +275,17 @@
   // ---------- Theme ----------
   const root = document.documentElement;
   const savedTheme = store.get("theme", null);
-  if (savedTheme) root.dataset.theme = savedTheme;
-  document.getElementById("themeToggle").addEventListener("click", () => {
-    root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
+  root.dataset.theme = savedTheme === "dark" ? "dark" : "light";
+  const themeBtn = document.getElementById("themeToggle");
+  themeBtn.setAttribute("aria-checked", root.dataset.theme === "dark");
+  themeBtn.addEventListener("click", () => {
+    root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+    themeBtn.setAttribute("aria-checked", root.dataset.theme === "dark");
     store.set("theme", root.dataset.theme);
   });
 
   // ---------- Views ----------
-  const SITE = Object.assign({ name: "Kitaplık", giscus: {} }, window.SITE || {});
+  const SITE = Object.assign({ name: "HopeScans", giscus: {} }, window.SITE || {});
   const DAY = 864e5;
   const chNum = (s, i) => s.chapters[i].number ?? i + 1;
   const chTime = (c) => (c.released ? Date.parse(c.released) || 0 : 0);
@@ -304,16 +307,31 @@
     return new Date(t).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" });
   }
 
-  // Son eklenen bölümler kartı: kapak + son 3 bölüm
+  // Kısa zaman etiketi: "4 gün", "1 ay"
+  function shortAgo(t) {
+    if (!t) return "";
+    const d = Date.now() - t;
+    if (d < 36e5) return `${Math.max(1, Math.floor(d / 6e4))} dk`;
+    if (d < DAY) return `${Math.floor(d / 36e5)} saat`;
+    if (d < 30 * DAY) return `${Math.floor(d / DAY)} gün`;
+    if (d < 365 * DAY) return `${Math.floor(d / (30 * DAY))} ay`;
+    return `${Math.floor(d / (365 * DAY))} yıl`;
+  }
+
+  // Son bölümler kartı: kapak + son 3 bölüm (numara, başlık, zaman)
   function updateCard(s) {
     const last = s.chapters.map((c, i) => ({ c, i })).slice(-3).reverse();
     return `<article class="ucard">
-      <a class="ucover cover" href="#/seri/${s.id}">${coverArt(s)}<span class="badge">${typeLabel(s.type)}</span></a>
+      <a class="ucover cover" href="#/seri/${s.id}">${coverArt(s)}</a>
       <div class="ubody">
         <a class="utitle" href="#/seri/${s.id}">${esc(s.title)}</a>
-        <div class="umeta">${ratingHTML(s)}<span>${esc(s.status)}</span></div>
         <ul class="uchs">${last.map(({ c, i }) => `
-          <li><a href="#/oku/${s.id}/${i + 1}"><span>Bölüm ${esc(chNum(s, i))}</span>${isNew(c) ? `<span class="new">YENİ</span>` : ""}</a><time>${ago(chTime(c))}</time></li>`).join("")}
+          <li><a href="#/oku/${s.id}/${i + 1}" title="${esc(c.title)}">
+            <span class="chno">${esc(chNum(s, i))}</span>
+            <span class="chname">${esc(c.title)}</span>
+            ${isNew(c) ? `<span class="new">YENİ</span>` : ""}
+            ${chTime(c) ? `<span class="chtime">${shortAgo(chTime(s.chapters[i]))}</span>` : ""}
+          </a></li>`).join("")}
         </ul>
       </div>
     </article>`;
@@ -349,96 +367,88 @@
       </a>`).join("")}</div>`;
   }
 
-  // Popüler: seçilen dönemde bölüm alan seriler, puana göre
-  function popular(range) {
-    const span = { week: 7 * DAY, month: 30 * DAY }[range];
-    let list = CATALOG.slice();
-    if (span) list = list.filter((s) => s.chapters.some((c) => chTime(c) && Date.now() - chTime(c) < span));
-    return list.sort((a, b) => (rating(b) ?? -1) - (rating(a) ?? -1) || byUpdate(a, b)).slice(0, 8);
-  }
-  function popularHTML(range) {
-    const list = popular(range);
-    if (!list.length) return `<li class="pop-empty">Bu dönemde güncellenen seri yok.</li>`;
-    return list.map((s, i) => `
-      <li><a href="#/seri/${s.id}">
-        <span class="rank">${i + 1}</span>
-        <span class="pop-cover cover">${coverArt(s)}</span>
-        <span class="pop-info"><b>${esc(s.title)}</b><small>${esc(s.genres.slice(0, 2).join(", "))}</small>${ratingHTML(s)}</span>
-      </a></li>`).join("");
-  }
-
-  const discordIcon = `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M19.3 5.3A16.6 16.6 0 0 0 15.2 4l-.5 1a15.4 15.4 0 0 0-5.4 0l-.5-1a16.6 16.6 0 0 0-4.1 1.3C2.1 9.2 1.4 13 1.7 16.8a16.8 16.8 0 0 0 5 2.5l1.1-1.7a10.8 10.8 0 0 1-1.7-.8l.4-.3a11.9 11.9 0 0 0 11 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.7a16.7 16.7 0 0 0 5-2.5c.4-4.4-.7-8.2-3-11.5zM8.7 14.5c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2z"/></svg>`;
-
-  // Duyurular (announcements.json)
+  // ---------- Yan sütun ----------
   let ANNOUNCEMENTS = [];
+  let BLOG = [];
   const safeHref = (u) => (/^(https?:\/\/|#\/|mailto:)/i.test(u || "") ? u : "");
+  const megaphone = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h3l6 4V6L6 10z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>`;
+
   function announcementsHTML() {
     if (!ANNOUNCEMENTS.length) return "";
-    return `<section class="panel notices">
-      <div class="panel-head"><h3><span class="glyph" aria-hidden="true">✦</span>Duyurular</h3></div>
+    return `<section class="box notices">
+      <h3 class="box-title">${megaphone}<span>Duyurular</span></h3>
       <ul class="notice-list">${ANNOUNCEMENTS.slice(0, 4).map((a) => {
         const href = safeHref(a.link);
         const ext = /^https?:/i.test(href);
         return `<li class="notice ${a.kind === "important" ? "important" : ""}">
           <b>${esc(a.title || "")}</b>
           ${a.text ? `<p>${esc(a.text)}</p>` : ""}
-          <div class="notice-foot">
-            <time>${ago(Date.parse(a.date) || 0)}</time>
-            ${href ? `<a href="${esc(href)}" ${ext ? 'target="_blank" rel="noopener"' : ""}>${esc(a.linkText || "Detaylar")} →</a>` : ""}
-          </div>
+          ${href ? `<a href="${esc(href)}" ${ext ? 'target="_blank" rel="noopener"' : ""}>${esc(a.linkText || "Detaylar")} →</a>` : ""}
         </li>`;
       }).join("")}</ul>
     </section>`;
   }
 
+  // Popüler: puana göre (okunma sayısı için sunucu gerekir)
+  const POP_SHORT = 8;
+  function popularRows(limit) {
+    return CATALOG.slice()
+      .sort((a, b) => (rating(b) ?? -1) - (rating(a) ?? -1) || byUpdate(a, b))
+      .slice(0, limit)
+      .map((s) => `<li><a href="#/seri/${s.id}">
+        <span class="pop-cover cover">${coverArt(s)}</span>
+        <span class="pop-info"><b>${esc(s.title)}</b><small>Durum: ${esc(s.status)}</small></span>
+        ${rating(s) != null ? `<span class="pop-badge">${star}${rating(s).toFixed(1)}</span>` : `<span class="pop-badge">${s.chapters.length} bl.</span>`}
+      </a></li>`).join("");
+  }
+
+  function blogBox() {
+    if (!BLOG.length) return "";
+    return `<section class="gbox">
+      <h3 class="ghead g2">Son Yazılar</h3>
+      <ul class="post-list">${BLOG.slice(0, 3).map((p) => `
+        <li><a href="#/blog/${esc(p.slug)}"><b>${esc(p.title)}</b><small>${esc(p.author || SITE.name)} - ${ago(Date.parse(p.date) || 0)}</small></a></li>`).join("")}
+      </ul>
+      <a class="gfoot g2" href="#/blog">Tüm Yazılar</a>
+    </section>`;
+  }
+
   function sidebar() {
-    const cont = continueList(3);
     return `<aside class="side">
       ${announcementsHTML()}
-      <section class="panel">
-        <div class="panel-head"><h3>Popüler</h3>
-          <div class="tabs" role="tablist">
-            <button data-pop="week" class="active">Haftalık</button><button data-pop="month">Aylık</button><button data-pop="all">Tümü</button>
-          </div>
-        </div>
-        <ol class="poplist" id="pop">${popularHTML("week")}</ol>
+      <section class="gbox">
+        <h3 class="ghead g1">En Popüler Seriler</h3>
+        <ul class="poplist" id="pop">${popularRows(POP_SHORT)}</ul>
+        ${CATALOG.length > POP_SHORT ? `<button class="gfoot g1" id="popMore">Daha Fazla Göster</button>` : ""}
       </section>
-      ${cont.length ? `<section class="panel"><div class="panel-head"><h3>Okumaya devam et</h3></div>${continueHTML(cont, true)}</section>` : ""}
-      ${SITE.discord ? `<a class="panel discord" href="${esc(SITE.discord)}" target="_blank" rel="noopener">${discordIcon}<span><b>Discord sunucumuz</b><small>Yeni bölüm duyuruları ve sohbet</small></span></a>` : ""}
-      ${SITE.donate ? `<a class="panel donate" href="${esc(SITE.donate)}" target="_blank" rel="noopener"><span><b>Bize destek ol</b><small>Bağışlar sitenin masraflarını karşılar</small></span></a>` : ""}
+      ${blogBox()}
     </aside>`;
   }
   function wireSidebar() {
-    app.querySelectorAll("[data-pop]").forEach((b) => b.addEventListener("click", () => {
-      app.querySelectorAll("[data-pop]").forEach((x) => x.classList.toggle("active", x === b));
-      document.getElementById("pop").innerHTML = popularHTML(b.dataset.pop);
-    }));
+    const more = document.getElementById("popMore");
+    if (more) more.onclick = () => {
+      const open = more.dataset.open === "1";
+      document.getElementById("pop").innerHTML = popularRows(open ? POP_SHORT : CATALOG.length);
+      more.dataset.open = open ? "0" : "1";
+      more.textContent = open ? "Daha Fazla Göster" : "Daha Az Göster";
+    };
   }
 
+  // ---------- Slider ----------
+  const bannerArt = (s) => (s.banner ? `<img src="${esc(s.banner)}" alt="" loading="lazy">` : coverArt(s));
   function slider(items) {
     if (!items.length) return "";
     return `<section class="slider" id="slider" aria-roledescription="carousel">
       ${items.map((s, i) => `
       <div class="slide ${i ? "" : "active"}" aria-hidden="${i ? "true" : "false"}">
-        <div class="slide-bg" style="--c1:${esc(s.palette[0])}">${coverArt(s)}</div>
+        <div class="slide-bg ${s.banner ? "has-banner" : ""}" style="--c1:${esc(s.palette[0])}">${bannerArt(s)}</div>
         <div class="slide-inner">
-          <a class="slide-cover cover" href="#/seri/${s.id}" tabindex="${i ? -1 : 0}">${coverArt(s)}</a>
-          <div class="slide-info">
-            <div class="tags"><span class="tag accent">${typeLabel(s.type)}</span>${s.genres.slice(0, 3).map((g) => `<span class="tag">${esc(g)}</span>`).join("")}</div>
-            <h2>${esc(s.title)}</h2>
-            <div class="slide-meta">${ratingHTML(s)}<span>${s.chapters.length} bölüm</span><span>${esc(s.status)}</span></div>
-            <p>${esc(s.synopsis)}</p>
-            <div class="btn-row">
-              <a class="btn primary" href="#/oku/${s.id}/${(state.progress[s.id]?.ch ?? 0) + 1}" tabindex="${i ? -1 : 0}">${state.progress[s.id] ? "Devam et" : "Okumaya başla"}</a>
-              <a class="btn ghost" href="#/seri/${s.id}" tabindex="${i ? -1 : 0}">Detaylar</a>
-            </div>
-          </div>
+          <h2>${esc(s.title)}</h2>
+          <p><b>Konusu:</b> ${esc(s.synopsis)}</p>
+          <a class="read-now" href="#/oku/${s.id}/${(state.progress[s.id]?.ch ?? 0) + 1}" tabindex="${i ? -1 : 0}">${state.progress[s.id] ? "Devam Et!" : "Şimdi Oku!"}</a>
         </div>
       </div>`).join("")}
-      ${items.length > 1 ? `
-      <button class="sl-btn prev" aria-label="Önceki"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-      <button class="sl-btn next" aria-label="Sonraki"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
-      <div class="sl-dots">${items.map((_, i) => `<button aria-label="${i + 1}. slayt" class="${i ? "" : "active"}"></button>`).join("")}</div>` : ""}
+      ${items.length > 1 ? `<div class="sl-dots">${items.map((_, i) => `<button aria-label="${i + 1}. slayt" class="${i ? "" : "active"}"></button>`).join("")}</div>` : ""}
     </section>`;
   }
   function wireSlider() {
@@ -457,8 +467,6 @@
       dots.forEach((d, i) => d.classList.toggle("active", i === cur));
     };
     const play = () => { clearInterval(timer); if (!matchMedia("(prefers-reduced-motion: reduce)").matches) timer = setInterval(() => show(cur + 1), 6000); };
-    el.querySelector(".prev").onclick = () => { show(cur - 1); play(); };
-    el.querySelector(".next").onclick = () => { show(cur + 1); play(); };
     dots.forEach((d, i) => (d.onclick = () => { show(i); play(); }));
     el.addEventListener("mouseenter", () => clearInterval(timer));
     el.addEventListener("mouseleave", play);
@@ -473,17 +481,19 @@
     return () => clearInterval(timer);
   }
 
-  const PAGE = 12;
+  const booksIcon = `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M3 4h3v16H3zM7 6h3v14H7zM11 3h3v17h-3zM15.2 5.6l2.9-.8 3.6 13.6-2.9.8z"/><path fill="currentColor" stroke="none" d="M2 20h20v1.5H2z"/></svg>`;
+
+  const PAGE = 10;
   function viewHome() {
     const featured = CATALOG.filter((s) => s.featured).sort(byUpdate);
     const slides = (featured.length ? featured : CATALOG.slice().sort(byUpdate)).slice(0, 5);
     const latest = CATALOG.slice().sort(byUpdate);
     let shown = PAGE;
-    app.innerHTML = `${slider(slides)}
-      <div class="wrap layout">
+    app.innerHTML = `<div class="wrap layout">
         <div class="main">
-          <section class="section">
-            <div class="section-head"><h2>Son eklenen bölümler</h2><a class="more" href="#/seriler">Tüm seriler →</a></div>
+          ${slider(slides)}
+          <section class="latest">
+            <h2 class="serif-title">${booksIcon}<span>Son Bölümler</span></h2>
             <div class="updates" id="updates"></div>
             <div class="load-more" id="loadMore"></div>
           </section>
@@ -499,6 +509,57 @@
     render();
     wireSidebar();
     return wireSlider();
+  }
+
+  // ---------- Blog ----------
+  function viewBlog() {
+    app.innerHTML = `<div class="wrap narrow-page">
+      <h1 class="serif-title page">${booksIcon}<span>Blog</span></h1>
+      ${BLOG.length ? `<div class="post-cards">${BLOG.map((p) => `
+        <a class="post-card" href="#/blog/${esc(p.slug)}">
+          <h2>${esc(p.title)}</h2>
+          <small>${esc(p.author || SITE.name)} · ${ago(Date.parse(p.date) || 0)}</small>
+          <p>${esc(p.excerpt || "")}</p>
+          <span class="more">Devamını oku →</span>
+        </a>`).join("")}</div>` : `<div class="empty">Henüz yazı yok.</div>`}
+    </div>`;
+  }
+  function viewPost(slug) {
+    const p = BLOG.find((x) => x.slug === slug);
+    if (!p) return notFound();
+    document.title = `${p.title} — ${SITE.name}`;
+    app.innerHTML = `<div class="wrap narrow-page">
+      <a class="back-link" href="#/blog">← Blog</a>
+      <article class="post">
+        <h1>${esc(p.title)}</h1>
+        <small>${esc(p.author || SITE.name)} · ${new Date(Date.parse(p.date) || 0).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}</small>
+        <div class="post-body">${p.html}</div>
+      </article>
+    </div>${commentsHTML()}`;
+    mountComments(`blog:${p.slug}`);
+  }
+
+  // ---------- SSS ----------
+  function viewFaq() {
+    const faq = Array.isArray(SITE.faq) ? SITE.faq : [];
+    app.innerHTML = `<div class="wrap narrow-page">
+      <h1 class="serif-title page"><span>Sıkça Sorulan Sorular</span></h1>
+      <div class="faq">${faq.map((f, i) => `
+        <details ${i ? "" : "open"}><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("") || `<div class="empty">Henüz soru eklenmedi.</div>`}
+      </div>
+    </div>`;
+  }
+
+  // ---------- Ekibe Katıl ----------
+  function viewJoin() {
+    const j = SITE.join || {};
+    const url = safeHref(j.url) || safeHref(SITE.discord);
+    app.innerHTML = `<div class="wrap narrow-page">
+      <h1 class="serif-title page"><span>Ekibe Katıl!</span></h1>
+      <p class="lead">${esc(j.text || "")}</p>
+      <div class="roles">${(j.roles || []).map((r) => `<div class="role"><b>${esc(r.name)}</b><p>${esc(r.desc || "")}</p></div>`).join("")}</div>
+      ${url ? `<a class="join-btn big" href="${esc(url)}" target="_blank" rel="noopener">Başvur</a>` : `<p class="muted">Başvuru bağlantısı yakında eklenecek.</p>`}
+    </div>`;
   }
 
   // ---------- Seri listesi ----------
@@ -578,7 +639,7 @@
     const el = document.getElementById("giscus");
     if (!el || !giscusOn()) return;
     const g = SITE.giscus, s = document.createElement("script");
-    const dark = root.dataset.theme !== "light";
+    const dark = root.dataset.theme === "dark";
     Object.entries({
       repo: g.repo, "repo-id": g.repoId, category: g.category, "category-id": g.categoryId,
       mapping: "specific", term, strict: "1", "reactions-enabled": "1", "emit-metadata": "0",
@@ -863,6 +924,9 @@
     if (!parts.length) { nav = "home"; viewCleanup = viewHome(); }
     else if (parts[0] === "seriler") { nav = "list"; viewList(); }
     else if (parts[0] === "kutuphane") { nav = "library"; viewLibrary(); }
+    else if (parts[0] === "blog") { nav = "blog"; parts[1] ? viewPost(parts[1]) : viewBlog(); }
+    else if (parts[0] === "sss") { nav = "faq"; viewFaq(); }
+    else if (parts[0] === "ekibe-katil") { nav = "join"; viewJoin(); }
     else if (parts[0] === "seri") viewSeries(parts[1]);
     else if (parts[0] === "oku") viewReader(parts[1], parts[2]);
     else notFound();
@@ -893,8 +957,9 @@
   document.querySelectorAll("[data-site-name]").forEach((el) => (el.textContent = SITE.name));
 
   const getJSON = (url) => fetch(url, { cache: "no-cache" }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
-  Promise.all([getJSON("catalog.json"), getJSON("announcements.json")])
-    .then(([extra, notices]) => {
+  Promise.all([getJSON("catalog.json"), getJSON("announcements.json"), getJSON("blog.json")])
+    .then(([extra, notices, posts]) => {
+      BLOG = (Array.isArray(posts) ? posts : []).filter((p) => p && p.slug && p.title);
       ANNOUNCEMENTS = (Array.isArray(notices) ? notices : []).filter((a) => a && a.title);
       for (const raw of Array.isArray(extra) ? extra : []) {
         const s = normalize(raw);
