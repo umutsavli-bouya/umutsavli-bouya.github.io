@@ -591,3 +591,9 @@ svg.brand-mark { width: 40px; height: 32px; background: none; border-radius: 0; 
 }
 .nav a.join-btn, .nav a.join-btn.active { background: linear-gradient(135deg, #0ea5e9, #22d3ee); color: #fff; }
 .nav a.join-btn.active { box-shadow: 0 0 0 3px rgba(14,165,233,.25), 0 4px 14px -4px rgba(14,165,233,.6); }
+
+/* J3 logosu */
+.brand .logo-svg { height: 66px; width: auto; display: block; overflow: visible; }
+.brand.small .logo-svg { height: 56px; }
+:root[data-theme="dark"] .brand .logo-svg { filter: drop-shadow(0 0 1px rgba(255,255,255,.15)); }
+@media (max-width: 760px) { .brand .logo-svg { height: 50px; } }
